@@ -81,6 +81,75 @@ document.addEventListener("DOMContentLoaded", function () {
   makeRowsDraggable();
 });
 
+function addNewRoomButton() {
+  // Prompt the user for the new room's details.
+  let roomName = prompt("Enter the room name:");
+  if (!roomName) return;
+  
+  let roomLink = prompt("Enter the room link (URL):");
+  if (!roomLink) return;
+  
+  let floorInput = prompt("Enter the floor (ground, second, third):");
+  if (!floorInput) return;
+  floorInput = floorInput.trim().toLowerCase();
+  
+  // Determine the full heading text based on input.
+  let floorHeadingText = "";
+  if (floorInput === "ground") {
+    floorHeadingText = "MM GROUND FLOOR";
+  } else if (floorInput === "second") {
+    floorHeadingText = "MM SECOND FLOOR";
+  } else if (floorInput === "third") {
+    floorHeadingText = "MM THIRD FLOOR";
+  } else {
+    alert("Invalid floor entered. Please enter 'ground', 'second', or 'third'.");
+    return;
+  }
+  
+  // Create a new button element (styled as you need it).
+  const newButton = document.createElement("button");
+  newButton.textContent = roomName;
+  newButton.onclick = function() {
+    window.location.href = roomLink;
+  };
+  newButton.className = "room-button"; // Add a class if you want to style it via CSS.
+  
+  // Find the container that holds the floor sections.
+  const mmContent = document.querySelector(".mm-content");
+  if (!mmContent) {
+    alert("MM content container not found.");
+    return;
+  }
+  
+  // Look for the floor heading that matches our floor.
+  let targetHeading = null;
+  const headings = mmContent.querySelectorAll("h2");
+  headings.forEach(heading => {
+    if (heading.textContent.trim().toUpperCase() === floorHeadingText.toUpperCase()) {
+      targetHeading = heading;
+    }
+  });
+  
+  if (!targetHeading) {
+    alert("Could not find the specified floor section.");
+    return;
+  }
+  
+  // Insert the new button after the target floor heading.
+  // If there are existing buttons immediately after the heading,
+  // this code will append the new button after them.
+  let insertAfterElem = targetHeading;
+  let nextElem = targetHeading.nextElementSibling;
+  while (nextElem && nextElem.tagName === "BUTTON") {
+    insertAfterElem = nextElem;
+    nextElem = nextElem.nextElementSibling;
+  }
+  insertAfterElem.insertAdjacentElement("afterend", newButton);
+  
+  alert("New room button added successfully!");
+}
+
+
 // ======================================================
 // ======= LOCK / EDIT TOGGLE FUNCTIONALITY =============
 // ======================================================
@@ -257,12 +326,16 @@ function addRow() {
   };
 
   const removeBtn = document.createElement("button");
-  removeBtn.textContent = "Remove";
-  removeBtn.className = "remove-btn";
-  removeBtn.onclick = function () {
-    newRow.remove();
-    saveTableData();
-  };
+    removeBtn.textContent = "Remove";
+    removeBtn.className = "remove-btn";
+    removeBtn.onclick = function () {
+      if (confirm("Are you sure you want to remove this row?")) {
+        newRow.remove();
+        saveTableData();
+      }
+    };
+  
+
 
   actionTd.appendChild(editBtn);
   actionTd.appendChild(removeBtn);
@@ -329,23 +402,26 @@ function loadTableData() {
       actionTd.appendChild(editBtn);
 
       const removeBtn = document.createElement("a");
-      removeBtn.textContent = "❌ Remove Row";
-      removeBtn.href = "#";
-      removeBtn.className = "remove-btn";
-      removeBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        const tbody = document.getElementById("tableBody");
-        const rows = Array.from(tbody.children);
-        const index = rows.indexOf(newRow);
-        if (index > -1) {
-          let tableData = JSON.parse(localStorage.getItem("tableData")) || [];
-          tableData.splice(index, 1);
-          localStorage.setItem("tableData", JSON.stringify(tableData));
-          newRow.remove();
-          saveTableData();
-          showNotification("Row removed successfully");
-        }
-      });
+        removeBtn.textContent = "❌ Remove Row";
+        removeBtn.href = "#";
+        removeBtn.className = "remove-btn";
+        removeBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          if (confirm("Are you sure you want to remove this row?")) {
+            const tbody = document.getElementById("tableBody");
+            const rows = Array.from(tbody.children);
+            const index = rows.indexOf(newRow);
+            if (index > -1) {
+              let tableData = JSON.parse(localStorage.getItem("tableData")) || [];
+              tableData.splice(index, 1);
+              localStorage.setItem("tableData", JSON.stringify(tableData));
+              newRow.remove();
+              saveTableData();
+              showNotification("Row removed successfully");
+            }
+          }
+        });
+      
       actionTd.appendChild(removeBtn);
       newRow.appendChild(actionTd);
       tbody.appendChild(newRow);
@@ -437,13 +513,15 @@ function insertTable() {
     });
     const actionTd = document.createElement("td");
     const removeBtn = document.createElement("a");
-    removeBtn.textContent = "❌ Remove Row";
-    removeBtn.href = "#";
-    removeBtn.className = "remove-btn";
-    removeBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      tr.remove();
-    });
+      removeBtn.textContent = "❌ Remove Row";
+      removeBtn.href = "#";
+      removeBtn.className = "remove-btn";
+      removeBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (confirm("Are you sure you want to remove this row?")) {
+          tr.remove();
+        }
+      });
     actionTd.appendChild(removeBtn);
     tr.appendChild(actionTd);
     tbody.appendChild(tr);

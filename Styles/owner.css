@@ -48,8 +48,8 @@ h1 {
 }
 
 .nav-content ul li {
-  margin: 0 10px;
-  background-color: rgb(32, 60, 223);
+  margin: 0;
+  background-color: rgb(32, 60, 223, .59);
   border-radius: 4px;
 }
 
@@ -198,7 +198,6 @@ ul li {
   margin: 0.5rem 0;
   padding: 0.5rem;
   border-radius: 4px;
-  display: flex;
   justify-content: space-between;
   align-items: center;
 }
@@ -256,6 +255,21 @@ button:hover,
   color: rgb(0, 0, 0);
 }
 
+.hamburger {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.hamburger .bar {
+  width: 25px;
+  height: 3px;
+  background-color: #fff;
+  margin: 4px 0;
+  transition: 0.3s;
+}
+
 .footer a, p {
   color: rgb(0, 0, 0);
   text-decoration: none;
@@ -271,7 +285,76 @@ button:hover,
     padding: 1rem;
     margin: 1rem;
   }
-  .nav-content ul li a {
-    font-size: 1rem;
+
+  .hamburger {
+    display: flex;
+    padding-right: 20px;
   }
+  
+  /* Hide nav-content by default */
+  .nav-content {
+    display: none;
+    position: absolute;
+    top: 60px; /* Adjust as needed */
+    right: 0;
+    width: 100%;
+    background-color: rgba(86, 119, 226, 0.9);
+    z-index: 100;
+  }
+  
+  /* Show nav-content when active */
+  .nav-content.active {
+    display: block;
+  }
+  
+  /* Stack navigation list items vertically */
+  .nav-content ul {
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .nav-content ul li {
+    width: 100%;
+    text-align: right;
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .dropdown {
+    position: relative; /* anchor for the absolute positioning */
+  }
+  
+  .dropdown .dropdown-content {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: auto;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    padding: 10px;
+    display: none; /* hide by default */
+    min-width: 150px;
+  }
+  
+  
+  .dropdown:hover .dropdown-content {
+    display: block; /* Show on hover */
+    text-align: right;
+  }
+  
+  .dropdown .dropdown-content a {
+    color: white; /* Ensure text is visible */
+    display: block;
+    padding: 8px 12px;
+    text-decoration: none;
+  }
+  
+  .dropdown .dropdown-content a:hover {
+    background: rgba(255, 255, 255, 0.2); /* Slightly darker on hover */
+  }
+  
 }
+
