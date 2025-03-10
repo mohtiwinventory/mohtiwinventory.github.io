@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System</title>
+    <link rel="stylesheet" href="/Styles/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=logout" />
+    <script>
+      // Redirect to login if the user is not logged in
+      if (!localStorage.getItem("role")) {
+        window.location.href = "login.html";
+      }
+    </script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="LOGO">
+      <a href="https://maryourhelp-cebu.edu.ph/"><img src="/img/361288426_705514794922565_8093013284390417376_n (1).jpg"></a>
+    </div>
+    
+    <!-- Hamburger icon -->
+    <div class="hamburger">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </div>
+    
+    <div class="nav-content">
+      <ul>
+        <li id="homeLink"><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li class="dropdown">
+          <a href="inventory.html" class="dropbtn">Inventory</a>
+          <div class="dropdown-content">
+            <a href="/BLDG inventory/auxBldg.html">AUX BLDG</a>
+            <a href="/BLDG inventory/mmBldg.html">MM BLDG</a>
+            <a href="/BLDG inventory/dbBldg.html">DB BLDG</a>
+          </div>
+        </li>
+        <li id="maintenanceLink"><a href="maintenance.html">Maintenance</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li>
+          <a href="#">
+            <div class="notification-hover-container">
+              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/>
+              </svg>
+              <div id="notification-container">
+                <div id="notification-list"></div>
+              </div>
+            </div>
+            <div id="notification" style="display:none;"></div>
+            <div id="notification-count" style="display:none;"></div>
+          </a>
+        </li>
+        <button id="logoutBtn" class="logout-button"><span class="material-symbols-outlined">
+          logout
+          </span></button>
+      </ul>
+    </div>
+  </nav>
+  <div class="header-img">
+      <img src="/img/website cover_20250114_213052_0002.png" alt="cover">
+  </div>
+    <section>
+        <div class="mm-inv">
+            <H1><a href="/inventory.html"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ff"><path d="M560-280 360-480l200-200v400Z"/></svg> MM BLDG</a></H1>
+            <div class="mm-content">
+                <h2>MM GROUND FLOOR</h2>
+                <button onclick="window.location.href = 'https://docs.google.com/spreadsheets/d/1pWITXdguG7ue19sD6zj3cYpEWnRm0VliEINDqfvmI6g/edit?gid=0#gid=0';">ELECTRICAL ROOM</button>
+                <!-- <button onclick="window.location.href = 'auxBldg.html';">AUX BLDG</button>
+                <button onclick="window.location.href = 'auxBldg.html';">AUX BLDG</button> -->
+                <h2>MM SECOND FLOOR</h2>
+                <button onclick="window.location.href = 'https://docs.google.com/spreadsheets/d/1Xo3VRQzogUnOfv7XHe9L3TNTOdZm-77TvIwVJlxsVzU/edit?gid=0#gid=0';">DRAFTING LAB</button>
+                <!-- <button onclick="window.location.href = 'mmBldg.html';">MM BLDG</button>
+                <button onclick="window.location.href = 'mmBldg.html';">MM BLDG</button> -->
+                <h2>MM THIRD FLOOR</h2>
+                <button onclick="window.location.href = 'https://docs.google.com/spreadsheets/d/1bNhp6eYNuabtS5FS9wBcTN6b9HvBLRAM24Txonu_r6U/edit?gid=0#gid=0';">CHEMISTRY LABORATORY</button>
+                <!-- <button onclick="window.location.href = 'dbBldg.html';">DB BLDG</button>
+                <button onclick="window.location.href = 'dbBldg.html';">DB BLDG</button> -->
+            </div>
+        </div>
+    </section>
+    <div class="footer">
+        <p>Copyright 2025 MOHTIW INVENTORY. All rights reserved.</p>
+      </div>
+      <script src="/script.js" defer></script>
+</body>
+</html>
