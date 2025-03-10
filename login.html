@@ -22,7 +22,7 @@
       }
       // Predefined admin codes (all converted to lowercase)
       const predefinedAdminCodes = ["admin2023", "admin2024", "admin2025"].map(
-        code => code.toLowerCase()
+        (code) => code.toLowerCase()
       );
     </script>
     <style>
@@ -34,6 +34,7 @@
   <body>
     <div class="login-container">
       <h1>Login</h1>
+
       <!-- Step 1: Email and Role Input -->
       <div id="step1">
         <form id="loginForm">
@@ -45,10 +46,16 @@
               <input type="radio" name="role" value="student" /> Student
             </label>
           </div>
-          <input type="email" id="email" placeholder="Enter your email" required />
+          <input
+            type="email"
+            id="email"
+            placeholder="Enter your email"
+            required
+          />
           <button type="submit" id="sendOTP">Send Code</button>
         </form>
       </div>
+
       <!-- Step 2: Code Verification -->
       <div id="step2" class="hidden">
         <form id="codeForm">
@@ -56,6 +63,7 @@
           <button type="submit" id="verifyCode">Verify Code</button>
         </form>
       </div>
+
       <div id="loginError" class="error-message"></div>
       <div id="loginMessage" class="message"></div>
     </div>
@@ -82,7 +90,7 @@
           const adminEmails = [
             "admin@admin",
             "superadmin@admin",
-            "anotheradmin@admin"
+            "anotheradmin@admin",
           ];
 
           // If the email matches an admin email, override role to "admin"
@@ -110,9 +118,9 @@
           sessionStorage.setItem("userEmail", email);
           sessionStorage.setItem("userRole", role);
 
-          // For admin, do not send OTP; instead, prompt for admin code.
+          // For admin, do NOT send OTP; instead, prompt for admin code.
           if (role === "admin") {
-            loginMessage.textContent = "OTP sent! Please check your email.";
+            loginMessage.textContent = "Please enter your admin code.";
             loginMessage.style.display = "block";
             document.getElementById("step1").classList.add("hidden");
             document.getElementById("step2").classList.remove("hidden");
@@ -166,7 +174,7 @@
               loginMessage.style.display = "block";
               localStorage.setItem("role", "admin");
               localStorage.setItem("adminEmail", email);
-              window.location.href = "owner.html";
+              window.location.href = "/owner.html"; // Use leading slash to redirect correctly
             } else {
               loginError.textContent = "Incorrect admin code. Please try again.";
               loginError.style.display = "block";
@@ -180,9 +188,9 @@
               localStorage.setItem("role", role);
               if (role === "staff") {
                 localStorage.setItem("staffEmail", email);
-                window.location.href = "Staff.html";
+                window.location.href = "/Staff.html";
               } else {
-                window.location.href = "Student.html";
+                window.location.href = "/Student.html";
               }
             } else {
               loginError.textContent = "Incorrect code. Please try again.";
