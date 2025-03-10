@@ -478,7 +478,7 @@ function sendEmailNotification(message) {
       ? localStorage.getItem("staffEmail")
       : localStorage.getItem("ownerEmail");
     if (emailAddress) {
-      emailjs.send("service_5efo2h9", "template_b7exqii", {
+      emailjs.send("service_o5dqsd4", "template_setn93r", {
         to_email: emailAddress,
         message: message,
       }).then(function (response) {
