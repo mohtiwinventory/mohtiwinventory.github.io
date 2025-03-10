@@ -112,7 +112,7 @@
 
           // For admin, do not send OTP; instead, prompt for admin code.
           if (role === "admin") {
-            loginMessage.textContent = "OTP sent! Please check your email.
+            loginMessage.textContent = "OTP sent! Please check your email.";
             loginMessage.style.display = "block";
             document.getElementById("step1").classList.add("hidden");
             document.getElementById("step2").classList.remove("hidden");
