@@ -75,28 +75,53 @@ function checkDueDate(row, dueDate) {
   const dueDateTime = new Date(dueDate);
   if (isNaN(dueDateTime)) return;
 
+  // Calculate difference in days between due date and today.
   const diffDays = Math.ceil((dueDateTime - today) / (1000 * 60 * 60 * 24));
   const formattedDueDate = dueDateTime.toLocaleDateString();
+
+  // Remove previous status classes
   row.classList.remove("due-soon", "overdue");
 
-  let message = "";
+  // Only notify if the due date is in the past or within 7 days.
+  if (diffDays > 7) return;
+
+  // Determine status based on due date
+  let status = "";
   if (diffDays < 0) {
     row.classList.add("overdue");
-    message = `Overdue: "${row.cells[0].querySelector("input").value}" is past due (Due: ${formattedDueDate})!`;
-  } else if (diffDays <= 7) {
+    status = "Overdue";
+  } else {
     row.classList.add("due-soon");
-    message = `Due soon: "${row.cells[0].querySelector("input").value}" is due in ${diffDays} day(s) (Due: ${formattedDueDate}).`;
+    status = "To be repaired";
   }
 
-  console.log("checkDueDate:", message);
+  // Get values from the row inputs.
+  const activity = row.cells[0].querySelector("input")?.value || "";
+  // Since we've added a new column, assume:
+  // Index 0: Activity, 1: Frequency, 2: Worked by, 3: Last Maintenance, 4: Due Date, 5: Location, 6: Remarks, 7: Actions.
+  const location = row.cells[5]?.querySelector("input")?.value || "";
+  const remarks = row.cells[6]?.querySelector("input")?.value || "";
 
-  // Only notify if this is a new message
-  if (message && row.dataset.lastNotification !== message) {
-    row.dataset.lastNotification = message;
-    showNotification(message);
-    sendEmailNotification(message);
+  // Build the formatted email message.
+  const emailMessage = 
+`Subject: Friendly Reminder – Due Date for the ${activity}
+
+Item: ${activity}
+Location: ${location}
+Job Order: ${remarks}
+Status: ${status}
+Due Date: ${formattedDueDate}`;
+
+  console.log("checkDueDate:", emailMessage);
+
+  // Only notify if this is a new message for this row.
+  if (emailMessage && row.dataset.lastNotification !== emailMessage) {
+    row.dataset.lastNotification = emailMessage;
+    showNotification(emailMessage);
+    sendEmailNotification(emailMessage);
   }
 }
+
 
 function saveTableData() {
   const tbody = document.getElementById("tableBody");
@@ -471,9 +496,9 @@ function showNotification(message) {
 
 function sendEmailNotification(message) {
   const role = localStorage.getItem("role");
-  // Check if the user is staff OR admin
+  // Check if the user is staff or admin.
   if (role === "staff" || role === "admin") {
-    // Use staffEmail for staff and ownerEmail for admin (adjust key names if needed)
+    // Use staffEmail for staff and ownerEmail for admin.
     const emailAddress = (role === "staff")
       ? localStorage.getItem("staffEmail")
       : localStorage.getItem("ownerEmail");
