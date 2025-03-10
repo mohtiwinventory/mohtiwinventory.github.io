@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // === Request Push Notification Permission ===
   if ("Notification" in window) {
     if (Notification.permission !== "granted" && Notification.permission !== "denied") {
       Notification.requestPermission().then(permission => {
@@ -6,7 +7,80 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   }
+
+  // === Hamburger Menu Toggle for Responsive Navigation ===
+  const hamburger = document.querySelector(".hamburger");
+  const navContent = document.querySelector(".nav-content");
+  if (hamburger && navContent) {
+    hamburger.addEventListener("click", function () {
+      navContent.classList.toggle("active");
+    });
+  }
+
+  // === Role-based Modifications ===
+  const role = localStorage.getItem("role");
+  // Remove maintenance link for non-admin roles.
+  if (role === "staff" || role === "student") {
+    const maintenanceLink = document.getElementById("maintenanceLink");
+    if (maintenanceLink) {
+      maintenanceLink.remove();
+    }
+  }
+  // Update home link depending on role.
+  const homeLink = document.getElementById("homeLink");
+  if (homeLink) {
+    if (role === "admin") {
+      homeLink.querySelector("a").href = "/owner.html";
+    } else if (role === "student") {
+      homeLink.querySelector("a").href = "/Student.html";
+    }
+    // For other roles (like staff), you can leave the default as index.html.
+  }
+
+  // === Existing Initialization ===
+  loadTableData();
+  checkAllDueDates();
+
+  const dropdowns = document.querySelectorAll(".dropdown");
+  dropdowns.forEach(function (dropdown) {
+    const dropbtn = dropdown.querySelector(".dropbtn");
+    if (dropbtn) {
+      dropbtn.addEventListener("click", function (e) {
+        if (window.innerWidth <= 768) {
+          e.preventDefault();
+          dropdown.classList.toggle("active");
+        }
+      });
+    }
+  });
+
+  // Notification toggle for in-page notifications
+  const notifIcon = document.querySelector(".notification-hover-container");
+  const notifContainer = document.getElementById("notification-container");
+  if (notifIcon && notifContainer) {
+    notifIcon.addEventListener("click", function (e) {
+      e.preventDefault();
+      notifContainer.style.display = notifContainer.style.display === "block" ? "none" : "block";
+    });
+  }
+
+  // Setup admin input if exists (assuming you have a function for that)
+  setupAdminInput("adminCode");
+
+  // Logout button functionality
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", function () {
+      localStorage.clear();
+      alert("You have been logged out.");
+      window.location.href = "/login.html";
+    });
+  }
+
+  // === Initialize Drag and Drop on Rows ===
+  makeRowsDraggable();
 });
+
 // ======================================================
 // ======= LOCK / EDIT TOGGLE FUNCTIONALITY =============
 // ======================================================
@@ -77,13 +151,10 @@ function checkDueDate(row, dueDate) {
   const dueDateTime = new Date(dueDate);
   if (isNaN(dueDateTime)) return;
 
-  // Calculate difference in days between due date and today.
   const diffDays = Math.ceil((dueDateTime - today) / (1000 * 60 * 60 * 24));
   const formattedDueDate = dueDateTime.toLocaleDateString();
 
-  // Remove previous status classes.
   row.classList.remove("due-soon", "overdue");
-
   if (diffDays > 7) return;
 
   let status = "";
@@ -95,12 +166,10 @@ function checkDueDate(row, dueDate) {
     status = "To be repair";
   }
 
-  // Extract values from row cells.
   const activity = row.cells[0].querySelector("input")?.value || "";
   const location = row.cells[5]?.querySelector("input")?.value || "";
   const jobOrder = row.cells[6]?.querySelector("input")?.value || "";
 
-  // Build the email message in the desired format.
   const emailMessage =
 `Subject: Friendly Reminder – Due Date for the ${activity.toUpperCase()}
 
@@ -111,14 +180,12 @@ Status: ${status}
 Due Date: ${formattedDueDate}`;
 
   console.log("checkDueDate:", emailMessage);
-
   if (emailMessage && row.dataset.lastNotification !== emailMessage) {
     row.dataset.lastNotification = emailMessage;
     showNotification(emailMessage);
     sendEmailNotification(emailMessage);
   }
 }
-
 
 function saveTableData() {
   const tbody = document.getElementById("tableBody");
@@ -163,7 +230,6 @@ function addRow() {
     input.type = cell.type;
     input.placeholder = cell.placeholder;
     input.style.textAlign = "center";
-    // Make Location and Status required:
     if (cell.placeholder === "Enter Location" || cell.placeholder === "Enter Status") {
       input.required = true;
     }
@@ -180,7 +246,6 @@ function addRow() {
     newRow.appendChild(td);
   });
 
-  // Actions cell
   const actionTd = document.createElement("td");
   const editBtn = document.createElement("button");
   editBtn.textContent = "Edit";
@@ -217,7 +282,6 @@ function loadTableData() {
     data.forEach((rowData) => {
       const newRow = document.createElement("tr");
       newRow.dataset.editing = "false";
-      // Loop over 8 columns: Activity, Frequency, Worked by, Last Maintenance, Due Date, Location, Job Order, Status
       for (let i = 0; i < 8; i++) {
         const td = document.createElement("td");
         const input = document.createElement("input");
@@ -225,7 +289,6 @@ function loadTableData() {
         input.type = (i === 3 || i === 4) ? "date" : "text";
         input.value = rowData[i] || "";
         input.disabled = true;
-        // For Location (index 5) and Status (index 7), set as required
         if (i === 5 || i === 7) {
           input.required = true;
         }
@@ -244,7 +307,6 @@ function loadTableData() {
         td.appendChild(input);
         newRow.appendChild(td);
       }
-      // Actions cell
       const actionTd = document.createElement("td");
       const editBtn = document.createElement("a");
       editBtn.textContent = "Edit";
@@ -293,7 +355,6 @@ function loadTableData() {
   }
 }
 
-
 function checkAllDueDates() {
   const tbody = document.getElementById("tableBody");
   tbody.querySelectorAll("tr").forEach(row => {
@@ -315,7 +376,6 @@ function exportToCSV() {
   rows.forEach(row => {
     let rowData = [];
     row.querySelectorAll("th, td").forEach(cell => {
-      // Enclose cell text in quotes and escape existing quotes
       rowData.push('"' + cell.textContent.replace(/"/g, '""') + '"');
     });
     csv.push(rowData.join(","));
@@ -375,7 +435,6 @@ function insertTable() {
       td.textContent = cellData.trim();
       tr.appendChild(td);
     });
-    // Actions cell for pasted rows
     const actionTd = document.createElement("td");
     const removeBtn = document.createElement("a");
     removeBtn.textContent = "❌ Remove Row";
@@ -400,7 +459,6 @@ function insertTable() {
 function showNotification(message) {
   console.log("showNotification called with message:", message);
 
-  // Show the in-page popup (existing functionality)
   const popup = document.getElementById("notification");
   if (popup) {
     popup.textContent = message;
@@ -410,10 +468,9 @@ function showNotification(message) {
     }, 3000);
   }
   
-  // Also show a push notification
+  // Show a push notification using the Notification API.
   showPushNotification(message);
   
-  // Optional: Also add the message to a notification list
   const notifList = document.getElementById("notification-list");
   if (notifList) {
     const div = document.createElement("div");
@@ -432,11 +489,9 @@ function showNotification(message) {
   }
 }
 
-
 function sendEmailNotification(message) {
   const role = localStorage.getItem("role");
   if (role === "admin") {
-    // Retrieve the admin email from localStorage. Ensure it was set with the correct format.
     const emailAddress = localStorage.getItem("adminEmail");
     if (!emailAddress) {
       console.error("Admin email not found in localStorage.");
@@ -451,104 +506,25 @@ function sendEmailNotification(message) {
       console.log("Email sent successfully!", response.status, response.text);
     }, function(error) {
       console.error("Failed to send email:", error);
-    });    
+    });
   }
 }
-
-
-
 
 // ======================================================
-// ======= INITIALIZATION ===============================
+// ======= PUSH NOTIFICATION FUNCTION ===================
 // ======================================================
 
-document.addEventListener("DOMContentLoaded", function () {
-  loadTableData();
-  checkAllDueDates();
-
-  // Hamburger and mobile dropdown toggles
-  const hamburger = document.querySelector(".hamburger");
-  const navContent = document.querySelector(".nav-content");
-  if (hamburger && navContent) {
-    hamburger.addEventListener("click", function () {
-      navContent.classList.toggle("active");
-    });
-  }
-
-  const dropdowns = document.querySelectorAll(".dropdown");
-  dropdowns.forEach(function (dropdown) {
-    const dropbtn = dropdown.querySelector(".dropbtn");
-    if (dropbtn) {
-      dropbtn.addEventListener("click", function (e) {
-        if (window.innerWidth <= 768) {
-          e.preventDefault();
-          dropdown.classList.toggle("active");
-        }
-      });
-    }
-  });
-
-  // Notification toggle
-  const notifIcon = document.querySelector(".notification-hover-container");
-  const notifContainer = document.getElementById("notification-container");
-  if (notifIcon && notifContainer) {
-    notifIcon.addEventListener("click", function (e) {
-      e.preventDefault();
-      notifContainer.style.display = notifContainer.style.display === "block" ? "none" : "block";
-    });
-  }
-
-  // Setup admin input if exists
-  setupAdminInput("adminCode");
-
-  // Logout button functionality
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", function () {
-      localStorage.clear();
-      alert("You have been logged out.");
-      window.location.href = "/login.html";
-    });
-  }
-
-  // Role-based modifications
-  const role = localStorage.getItem("role");
-if (role === "staff" || role === "student") {
-  const maintenanceLink = document.getElementById("maintenanceLink");
-  if (maintenanceLink) {
-    maintenanceLink.remove();
-  }
-}
-if (role === "student") {
-  const homeLink = document.getElementById("homeLink");
-  if (homeLink) {
-    homeLink.querySelector("a").href = "Student.html";
-  }
-}
-if (role === "admin") {
-  const homeLink = document.getElementById("homeLink");
-  if (homeLink) {
-    homeLink.querySelector("a").href = "owner.html";
-  }
-}
-
-  // Initialize drag and drop on rows
-  makeRowsDraggable();
-});
 function showPushNotification(message) {
   if (!("Notification" in window)) {
     console.error("This browser does not support desktop notifications.");
     return;
   }
-
-  // Check if notification permissions have already been granted
   if (Notification.permission === "granted") {
     new Notification("Maintenance Alert", {
       body: message,
-      icon: "/img/notification-icon.png" // Optional: add an icon URL
+      icon: "/img/notification-icon.png"
     });
   } else if (Notification.permission !== "denied") {
-    // Otherwise, ask the user for permission
     Notification.requestPermission().then(permission => {
       if (permission === "granted") {
         new Notification("Maintenance Alert", {
