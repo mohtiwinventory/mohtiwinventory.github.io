@@ -80,6 +80,14 @@
       <h1>Job Order</h1>
       <h3>Paste your Excel data below</h3>
     </div>
+
+    <!-- Search Bar -->
+    <input type="text" id="searchInput" placeholder="Search records...">
+
+    <!-- Export Buttons -->
+    <button onclick="exportToCSV()">Export to CSV</button>
+    <button onclick="exportToExcel()">Export to Excel</button>
+
     <div class="table">
       <!-- Textarea for pasted Excel data -->
       <textarea id="excelData" placeholder="Paste your Excel data here, separated by tabs or commas..."></textarea>
@@ -88,22 +96,22 @@
       <!-- The table -->
       <table id="activityTable">
         <thead>
-          <tr>
-            <th>Activity</th>
-            <th>Frequency</th>
-            <th>Worked by</th>
-            <th>Last Maintenance</th>
-            <th>Due Date</th>
-            <th>Location</th>
-            <th>Remarks</th>
-            <th>Actions</th>
-          </tr>
+            <tr>
+                <th>Activity</th>
+                <th>Frequency</th>
+                <th>Worked by</th>
+                <th>Last Maintenance</th>
+                <th>Due Date</th>
+                <th>Location</th>
+                <th>Job Order</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
         </thead>        
         <tbody id="tableBody"></tbody>
-      </table>
-      <!-- Optional manual Add/Remove buttons -->
-      <button onclick="addRow()">Add Row</button>
-      <button onclick="clearTable()">Remove Row</button>
+    </table>
+    <button onclick="addRow()">Add Row</button>
+    <button onclick="clearTable()">Remove Row</button>
     </div>
   </section>
 
@@ -125,7 +133,7 @@
     document.addEventListener("DOMContentLoaded", function() {
       // Disable editing for student role
       const role = localStorage.getItem("role");
-      if (role === "student", "staff") {
+      if (role === "student") {
         document.querySelectorAll("#tableBody input").forEach(input => input.disabled = true);
       }
     });

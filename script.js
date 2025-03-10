@@ -147,98 +147,71 @@ function saveTableData() {
   checkAllDueDates();
 }
 
-function addRow() {
-  const table = document.getElementById("activityTable");
-  const tbody = document.getElementById("tableBody");
-  const newRow = document.createElement("tr");
-  let tableData = JSON.parse(localStorage.getItem("tableData")) || [];
 
-  // Create an empty row (with 6 cells)
-  const newRowData = [...Array(table.rows[0].cells.length)].map(() => "");
-  tableData.push(newRowData);
-  localStorage.setItem("tableData", JSON.stringify(tableData));
+  function addRow() {
+    const tbody = document.getElementById("tableBody");
+    const newRow = document.createElement("tr");
 
-  // Define the structure for each cell
-  const cellStructure = [
-    { type: "text", placeholder: "Enter activity" },
-    { type: "text", placeholder: "Enter frequency" },
-    { type: "text", placeholder: "Enter worked by" },
-    { type: "date", placeholder: "Last Maintenance" },
-    { type: "date", placeholder: "Due Date" },
-    { type: "date", placeholder: "Enter remarks date" }
-  ];
+    const cellData = [
+        { type: "text", placeholder: "Enter activity" },
+        { type: "text", placeholder: "Enter frequency" },
+        { type: "text", placeholder: "Enter worked by" },
+        { type: "date", placeholder: "Last Maintenance" },
+        { type: "date", placeholder: "Due Date" },
+        { type: "text", placeholder: "Enter Location" },
+        { type: "text", placeholder: "Enter Job Order" },
+        { type: "text", placeholder: "Enter Status" }
+    ];
 
-  cellStructure.forEach((cell, index) => {
-    const td = document.createElement("td");
-    const input = document.createElement("input");
-    input.type = cell.type;
-    if (cell.placeholder) input.placeholder = cell.placeholder;
-    input.style.textAlign = "center";
-    // Lock inputs by default
-    input.disabled = true;
+    cellData.forEach((cell, index) => {
+        const td = document.createElement("td");
+        const input = document.createElement("input");
+        input.type = cell.type;
+        input.placeholder = cell.placeholder;
+        input.style.textAlign = "center";
+        input.disabled = true;
 
-    if (index === 4) {
-      // For Due Date column, reformat the date and check due date
-      input.addEventListener("change", () => {
-        const parsedDate = new Date(input.value);
-        if (!isNaN(parsedDate)) {
-          input.value = parsedDate.toISOString().slice(0, 10);
+        // Auto-check due date when modified
+        if (index === 4) {
+            input.addEventListener("change", () => {
+                checkDueDate(newRow, input.value);
+                saveTableData();
+            });
+        } else {
+            input.addEventListener("change", saveTableData);
         }
-        checkDueDate(newRow, input.value);
-        saveTableData();
-      });
-    } else {
-      input.addEventListener("change", saveTableData);
-    }
-    td.appendChild(input);
-    newRow.appendChild(td);
-  });
 
+        td.appendChild(input);
+        newRow.appendChild(td);
+    });
 
-  // ---- ACTIONS CELL: EDIT & REMOVE BUTTONS ----
+    // Action Buttons
   const actionTd = document.createElement("td");
   
   const editBtn = document.createElement("button");
   editBtn.textContent = "Edit";
   editBtn.className = "edit-btn";
   editBtn.onclick = function () {
-    const inputs = newRow.querySelectorAll("input");
-    // Toggle the disabled attribute on all inputs of this row
-    inputs.forEach(input => {
-      input.disabled = !input.disabled;
-    });
-    // Optionally update button text to "Lock" when editing
-    editBtn.textContent = (editBtn.textContent === "Edit") ? "Lock" : "Edit";
+      const inputs = newRow.querySelectorAll("input");
+      inputs.forEach(input => input.disabled = !input.disabled);
+      editBtn.textContent = editBtn.textContent === "Edit" ? "Lock" : "Edit";
   };
 
-  // Create the Remove button
- // Remove button removes the row from the table and localStorage
- const removeBtn = document.createElement("button");
- removeBtn.textContent = "Remove";
- removeBtn.className = "remove-btn";
- removeBtn.onclick = function () {
-   const tbody = document.getElementById("tableBody");
-   const rows = Array.from(tbody.children);
-   const index = rows.indexOf(newRow);
-   if (index > -1) {
-     tableData = JSON.parse(localStorage.getItem("tableData")) || [];
-     tableData.splice(index, 1);
-     localStorage.setItem("tableData", JSON.stringify(tableData));
-     newRow.remove();
-     saveTableData();
-     showNotification("Row removed successfully");
-     table.scrollIntoView({ behavior: "smooth", block: "start" });
-   }
- };
+  const removeBtn = document.createElement("button");
+  removeBtn.textContent = "Remove";
+  removeBtn.className = "remove-btn";
+  removeBtn.onclick = function () {
+      newRow.remove();
+      saveTableData();
+  };
 
- // Append both buttons to the Actions cell
- actionTd.appendChild(editBtn);
- actionTd.appendChild(removeBtn);
- newRow.appendChild(actionTd);
+  actionTd.appendChild(editBtn);
+  actionTd.appendChild(removeBtn);
+  newRow.appendChild(actionTd);
 
- tbody.appendChild(newRow);
- saveTableData();
- makeRowsDraggable(); // Enable drag and drop on the new row
+  tbody.appendChild(newRow);
+  saveTableData();
+  makeRowsDraggable(); // Enable drag and drop on the new row
 }
 
 function loadTableData() {
@@ -582,11 +555,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
 document.addEventListener("DOMContentLoaded", function () {
   const role = localStorage.getItem("role");
-  if (role === "student") {
-    const maintenanceLink = document.getElementById("maintenanceLink");
-    if (maintenanceLink) maintenanceLink.remove();
+  
+  if (role === "staff" || role === "student") {
+      const maintenanceLink = document.getElementById("maintenanceLink");
+      if (maintenanceLink) {
+          maintenanceLink.remove(); // Removes the maintenance tab for staff and students
+      }
   }
 });
+
 
 document.addEventListener("DOMContentLoaded", function () {
   const role = localStorage.getItem("role");

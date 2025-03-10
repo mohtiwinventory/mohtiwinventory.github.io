@@ -63,7 +63,8 @@
   <!-- Greeting Section -->
   <section>
     <h1>Owner Dashboard</h1>
-    <p><span id="ownerNameDisplay">Hello, Owner</span></p>
+    <p class="Maintext"><span id="ownerNameDisplay">Hello, Owner</span></p>
+    <p><span id="ownerEmailDisplay" class="subtext"></span></p>
   </section>
 
   <!-- Section to update admin name -->
@@ -107,6 +108,13 @@
       }
     });
 
+    document.addEventListener("DOMContentLoaded", function () {
+      const ownerEmail = localStorage.getItem("ownerEmail");
+      if (ownerEmail) {
+        document.getElementById("ownerEmailDisplay").textContent = ownerEmail;
+      }
+    });
+
     // Save the owner name to localStorage and update the greeting
     function setOwnerName() {
       const name = document.getElementById("ownerNameInput").value.trim();
@@ -122,6 +130,7 @@
       const email = document.getElementById("ownerEmailInput").value.trim();
       if (email) {
         localStorage.setItem("adminEmail", email);
+        document.getElementById("ownerEmailDisplay").textContent = email;
         alert("Owner email set.");
       }
     }
