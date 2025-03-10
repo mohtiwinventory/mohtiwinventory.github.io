@@ -127,9 +127,10 @@ border-radius: 20px;
   scale: 0.9;
 }
 section {
-  height: 100vh;
+  min-height: 100vh;
   padding-bottom: 20px;
 }
+
 .about {
 margin: 10px 40px;
 background-color: inherit;
@@ -337,7 +338,6 @@ transform: scale(.9);
   /* Table Styles (Using your provided style) */
 .table {
   width: 100%;
-  height: 60vh; /* Full viewport height */
   overflow-y: auto;
 }
 .table textarea {
@@ -360,29 +360,50 @@ transform: scale(.9);
   transform: scale(0.9);
   cursor: pointer;
 }
-.table table {
+
+
+.job-order {
+  padding: 1rem 0.9rem;
+  text-align: start;
+  height: inherit;
+  padding-bottom: 80px;
+}
+.job-order table {
   width: 90%;          /* Make the table take 90% of the available width */
   margin: 2% auto;      /* Center it horizontally with top/bottom margins */
   border-collapse: collapse;
   margin-bottom: 10px;
 }
 
-.table th {
+.job-order th {
   background-color: rgba(43, 88, 235, 0.829);
   padding: 0.6rem 1rem;
   text-align: left;
 }
 
-.table td {
+.job-order td {
   padding: 0.6rem;
   text-align: center;
 }
 
-.table tr {
+.job-order tr {
   width: 100%;
   height: auto;
 }
-
+.job-order button {
+  font-size: 15px;
+  font-weight: bold;
+  background-color: rgba(18, 60, 184, 0.548);
+  padding: 10px 15px;
+  border-radius: 10px;
+  border: none;
+  margin-top: 1rem;
+  margin-left: 1rem;
+}
+.job-order button:hover {
+  transform: scale(0.9);
+  cursor: pointer;
+}
 .add {
   padding: 1rem 0.9rem;
 }
@@ -392,7 +413,6 @@ tr {
 tr:nth-child(even) {
   background-color: rgba(43, 88, 235, 0.548);
 }
-
 .footer {
   background-color: rgb(26, 48, 178);
   color: white;
@@ -404,15 +424,19 @@ tr:nth-child(even) {
   bottom: 0;
 }
 
-.footer a {
+.footer {
+  background-color: rgb(26, 48, 178);
   color: white;
-  text-decoration: none;
-  font-weight: bold;
+  text-align: center;
+  padding: 15px;
+  font-size: 14px;
+  position: fixed; /* Changed from relative to fixed */
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 10; /* Ensure it stays on top if needed */
 }
 
-.footer a:hover {
-  text-decoration: underline;
-}
 
 /* Responsive Styles */
 @media (max-width: 768px) {

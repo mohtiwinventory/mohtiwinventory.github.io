@@ -1,19 +1,24 @@
+document.addEventListener("DOMContentLoaded", function () {
+  if ("Notification" in window) {
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission().then(permission => {
+        console.log("Notification permission:", permission);
+      });
+    }
+  }
+});
 // ======================================================
 // ======= LOCK / EDIT TOGGLE FUNCTIONALITY =============
 // ======================================================
 
-// By default, after inserting data the table is locked (read-only).
 let isEditing = false;
 
-// Toggle editing mode: unlock (remove disabled attribute) if in edit mode;
-// lock (set disabled attribute) if not in edit mode.
 function toggleEditMode() {
   const inputs = document.querySelectorAll("#tableBody input");
   isEditing = !isEditing;
   inputs.forEach(input => {
     input.disabled = !isEditing;
   });
-  // Optionally update the button text:
   const btn = document.getElementById("toggleEditBtn");
   if (btn) {
     btn.textContent = isEditing ? "Lock" : "Edit";
@@ -50,12 +55,9 @@ function dragOver(e) {
 function drop(e) {
   e.stopPropagation();
   if (dragSrcRow !== this) {
-    // Swap the HTML of the source row and the target row
     dragSrcRow.outerHTML = this.outerHTML;
     this.outerHTML = e.dataTransfer.getData("text/html");
-    // Reinitialize event listeners after swapping rows
     makeRowsDraggable();
-    // Save the new order to localStorage
     saveTableData();
   }
   return false;
@@ -79,42 +81,37 @@ function checkDueDate(row, dueDate) {
   const diffDays = Math.ceil((dueDateTime - today) / (1000 * 60 * 60 * 24));
   const formattedDueDate = dueDateTime.toLocaleDateString();
 
-  // Remove previous status classes
+  // Remove previous status classes.
   row.classList.remove("due-soon", "overdue");
 
-  // Only notify if the due date is in the past or within 7 days.
   if (diffDays > 7) return;
 
-  // Determine status based on due date
   let status = "";
   if (diffDays < 0) {
     row.classList.add("overdue");
     status = "Overdue";
   } else {
     row.classList.add("due-soon");
-    status = "To be repaired";
+    status = "To be repair";
   }
 
-  // Get values from the row inputs.
+  // Extract values from row cells.
   const activity = row.cells[0].querySelector("input")?.value || "";
-  // Since we've added a new column, assume:
-  // Index 0: Activity, 1: Frequency, 2: Worked by, 3: Last Maintenance, 4: Due Date, 5: Location, 6: Remarks, 7: Actions.
   const location = row.cells[5]?.querySelector("input")?.value || "";
-  const remarks = row.cells[6]?.querySelector("input")?.value || "";
+  const jobOrder = row.cells[6]?.querySelector("input")?.value || "";
 
-  // Build the formatted email message.
-  const emailMessage = 
-`Subject: Friendly Reminder – Due Date for the ${activity}
+  // Build the email message in the desired format.
+  const emailMessage =
+`Subject: Friendly Reminder – Due Date for the ${activity.toUpperCase()}
 
 Item: ${activity}
 Location: ${location}
-Job Order: ${remarks}
+Job Order: ${jobOrder}
 Status: ${status}
 Due Date: ${formattedDueDate}`;
 
   console.log("checkDueDate:", emailMessage);
 
-  // Only notify if this is a new message for this row.
   if (emailMessage && row.dataset.lastNotification !== emailMessage) {
     row.dataset.lastNotification = emailMessage;
     showNotification(emailMessage);
@@ -128,11 +125,9 @@ function saveTableData() {
   const data = [];
   tbody.querySelectorAll("tr").forEach((row) => {
     const rowData = [];
-    // Save the first 6 input values (skip the Actions cell)
     row.querySelectorAll("input").forEach((input) => {
       rowData.push(input.value);
     });
-    // Only add the row if at least one cell is not empty
     if (rowData.some(cell => cell.trim() !== "")) {
       data.push(rowData);
     }
@@ -147,62 +142,61 @@ function saveTableData() {
   checkAllDueDates();
 }
 
+function addRow() {
+  const tbody = document.getElementById("tableBody");
+  const newRow = document.createElement("tr");
 
-  function addRow() {
-    const tbody = document.getElementById("tableBody");
-    const newRow = document.createElement("tr");
+  const cellData = [
+    { type: "text", placeholder: "Enter activity" },
+    { type: "text", placeholder: "Enter frequency" },
+    { type: "text", placeholder: "Enter worked by" },
+    { type: "date", placeholder: "Last Maintenance" },
+    { type: "date", placeholder: "Due Date" },
+    { type: "text", placeholder: "Enter Location" },
+    { type: "text", placeholder: "Enter Job Order" },
+    { type: "text", placeholder: "Enter Status" }
+  ];
 
-    const cellData = [
-        { type: "text", placeholder: "Enter activity" },
-        { type: "text", placeholder: "Enter frequency" },
-        { type: "text", placeholder: "Enter worked by" },
-        { type: "date", placeholder: "Last Maintenance" },
-        { type: "date", placeholder: "Due Date" },
-        { type: "text", placeholder: "Enter Location" },
-        { type: "text", placeholder: "Enter Job Order" },
-        { type: "text", placeholder: "Enter Status" }
-    ];
+  cellData.forEach((cell) => {
+    const td = document.createElement("td");
+    const input = document.createElement("input");
+    input.type = cell.type;
+    input.placeholder = cell.placeholder;
+    input.style.textAlign = "center";
+    // Make Location and Status required:
+    if (cell.placeholder === "Enter Location" || cell.placeholder === "Enter Status") {
+      input.required = true;
+    }
+    input.disabled = true;
+    if (cell.placeholder === "Due Date") {
+      input.addEventListener("change", () => {
+        checkDueDate(newRow, input.value);
+        saveTableData();
+      });
+    } else {
+      input.addEventListener("change", saveTableData);
+    }
+    td.appendChild(input);
+    newRow.appendChild(td);
+  });
 
-    cellData.forEach((cell, index) => {
-        const td = document.createElement("td");
-        const input = document.createElement("input");
-        input.type = cell.type;
-        input.placeholder = cell.placeholder;
-        input.style.textAlign = "center";
-        input.disabled = true;
-
-        // Auto-check due date when modified
-        if (index === 4) {
-            input.addEventListener("change", () => {
-                checkDueDate(newRow, input.value);
-                saveTableData();
-            });
-        } else {
-            input.addEventListener("change", saveTableData);
-        }
-
-        td.appendChild(input);
-        newRow.appendChild(td);
-    });
-
-    // Action Buttons
+  // Actions cell
   const actionTd = document.createElement("td");
-  
   const editBtn = document.createElement("button");
   editBtn.textContent = "Edit";
   editBtn.className = "edit-btn";
   editBtn.onclick = function () {
-      const inputs = newRow.querySelectorAll("input");
-      inputs.forEach(input => input.disabled = !input.disabled);
-      editBtn.textContent = editBtn.textContent === "Edit" ? "Lock" : "Edit";
+    const inputs = newRow.querySelectorAll("input");
+    inputs.forEach(input => input.disabled = !input.disabled);
+    editBtn.textContent = editBtn.textContent === "Edit" ? "Lock" : "Edit";
   };
 
   const removeBtn = document.createElement("button");
   removeBtn.textContent = "Remove";
   removeBtn.className = "remove-btn";
   removeBtn.onclick = function () {
-      newRow.remove();
-      saveTableData();
+    newRow.remove();
+    saveTableData();
   };
 
   actionTd.appendChild(editBtn);
@@ -211,7 +205,7 @@ function saveTableData() {
 
   tbody.appendChild(newRow);
   saveTableData();
-  makeRowsDraggable(); // Enable drag and drop on the new row
+  makeRowsDraggable();
 }
 
 function loadTableData() {
@@ -220,18 +214,21 @@ function loadTableData() {
     const data = JSON.parse(savedData);
     const tbody = document.getElementById("tableBody");
     tbody.innerHTML = "";
-    data.forEach((rowData, rIndex) => {
+    data.forEach((rowData) => {
       const newRow = document.createElement("tr");
-      // Set row editing mode to false by default
       newRow.dataset.editing = "false";
-      for (let i = 0; i < 6; i++) {
+      // Loop over 8 columns: Activity, Frequency, Worked by, Last Maintenance, Due Date, Location, Job Order, Status
+      for (let i = 0; i < 8; i++) {
         const td = document.createElement("td");
         const input = document.createElement("input");
         input.style.textAlign = "center";
-        input.type = i < 3 ? "text" : "date";
+        input.type = (i === 3 || i === 4) ? "date" : "text";
         input.value = rowData[i] || "";
-        // Lock inputs by default
         input.disabled = true;
+        // For Location (index 5) and Status (index 7), set as required
+        if (i === 5 || i === 7) {
+          input.required = true;
+        }
         if (i === 4) {
           input.addEventListener("change", () => {
             const parsedDate = new Date(input.value);
@@ -247,10 +244,8 @@ function loadTableData() {
         td.appendChild(input);
         newRow.appendChild(td);
       }
-      // ---- ACTIONS CELL: EDIT & REMOVE BUTTONS ----
+      // Actions cell
       const actionTd = document.createElement("td");
-
-      // Edit button
       const editBtn = document.createElement("a");
       editBtn.textContent = "Edit";
       editBtn.href = "#";
@@ -271,12 +266,12 @@ function loadTableData() {
       });
       actionTd.appendChild(editBtn);
 
-      // Remove button
       const removeBtn = document.createElement("a");
       removeBtn.textContent = "❌ Remove Row";
       removeBtn.href = "#";
       removeBtn.className = "remove-btn";
-      removeBtn.addEventListener("click", function () {
+      removeBtn.addEventListener("click", function (e) {
+        e.preventDefault();
         const tbody = document.getElementById("tableBody");
         const rows = Array.from(tbody.children);
         const index = rows.indexOf(newRow);
@@ -291,14 +286,13 @@ function loadTableData() {
       });
       actionTd.appendChild(removeBtn);
       newRow.appendChild(actionTd);
-      // ------------------------------------------------
-
       tbody.appendChild(newRow);
       checkDueDate(newRow, rowData[4]);
     });
-    makeRowsDraggable(); // Enable drag and drop on all loaded rows
+    makeRowsDraggable();
   }
 }
+
 
 function checkAllDueDates() {
   const tbody = document.getElementById("tableBody");
@@ -309,9 +303,53 @@ function checkAllDueDates() {
     }
   });
 }
-
-// Check due dates every minute
 setInterval(checkAllDueDates, 60000);
+
+// ======================================================
+// ======= EXPORT & CLEAR FUNCTIONS =====================
+// ======================================================
+
+function exportToCSV() {
+  const rows = document.querySelectorAll("table tr");
+  let csv = [];
+  rows.forEach(row => {
+    let rowData = [];
+    row.querySelectorAll("th, td").forEach(cell => {
+      // Enclose cell text in quotes and escape existing quotes
+      rowData.push('"' + cell.textContent.replace(/"/g, '""') + '"');
+    });
+    csv.push(rowData.join(","));
+  });
+  const csvString = csv.join("\n");
+  const blob = new Blob([csvString], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.setAttribute("hidden", "");
+  a.setAttribute("href", url);
+  a.setAttribute("download", "maintenance_data.csv");
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function exportToExcel() {
+  const table = document.getElementById("activityTable");
+  const html = table.outerHTML;
+  const blob = new Blob([html], { type: "application/vnd.ms-excel" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "maintenance_data.xls";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function clearTable() {
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = "";
+  localStorage.removeItem("tableData");
+}
 
 // ======================================================
 // ======= EXCEL DATA INSERTION FUNCTIONALITY ===========
@@ -327,7 +365,6 @@ function insertTable() {
   const tbody = document.getElementById("tableBody");
   tbody.innerHTML = "";
   rows.forEach(rowText => {
-    // Split by tab; if only one value, try comma
     let cells = rowText.split("\t");
     if (cells.length === 1) {
       cells = rowText.split(",");
@@ -338,7 +375,7 @@ function insertTable() {
       td.textContent = cellData.trim();
       tr.appendChild(td);
     });
-    // Add an actions cell with a remove button for inserted rows
+    // Actions cell for pasted rows
     const actionTd = document.createElement("td");
     const removeBtn = document.createElement("a");
     removeBtn.textContent = "❌ Remove Row";
@@ -352,10 +389,74 @@ function insertTable() {
     tr.appendChild(actionTd);
     tbody.appendChild(tr);
   });
-  // Save the inserted data and enable drag & drop on these rows
   saveTableData();
   makeRowsDraggable();
 }
+
+// ======================================================
+// ======= NOTIFICATION & EMAIL FUNCTIONS =============
+// ======================================================
+
+function showNotification(message) {
+  console.log("showNotification called with message:", message);
+
+  // Show the in-page popup (existing functionality)
+  const popup = document.getElementById("notification");
+  if (popup) {
+    popup.textContent = message;
+    popup.style.display = "block";
+    setTimeout(() => {
+      popup.style.display = "none";
+    }, 3000);
+  }
+  
+  // Also show a push notification
+  showPushNotification(message);
+  
+  // Optional: Also add the message to a notification list
+  const notifList = document.getElementById("notification-list");
+  if (notifList) {
+    const div = document.createElement("div");
+    div.className = "notification-item";
+    div.textContent = message;
+    const dismissBtn = document.createElement("button");
+    dismissBtn.textContent = "✖";
+    dismissBtn.style.border = "none";
+    dismissBtn.style.background = "transparent";
+    dismissBtn.style.cursor = "pointer";
+    dismissBtn.onclick = function () {
+      div.remove();
+    };
+    div.appendChild(dismissBtn);
+    notifList.appendChild(div);
+  }
+}
+
+
+function sendEmailNotification(message) {
+  const role = localStorage.getItem("role");
+  if (role === "admin") {
+    // Retrieve the admin email from localStorage. Ensure it was set with the correct format.
+    const emailAddress = localStorage.getItem("adminEmail");
+    if (!emailAddress) {
+      console.error("Admin email not found in localStorage.");
+      return;
+    }
+    console.log("Admin email retrieved:", emailAddress);
+    emailjs.send("service_o5dqsd4", "template_setn93r", {
+      to_email: emailAddress,
+      message: message
+    })
+    .then(function(response) {
+      console.log("Email sent successfully!", response.status, response.text);
+    }, function(error) {
+      console.error("Failed to send email:", error);
+    });    
+  }
+}
+
+
+
 
 // ======================================================
 // ======= INITIALIZATION ===============================
@@ -365,7 +466,7 @@ document.addEventListener("DOMContentLoaded", function () {
   loadTableData();
   checkAllDueDates();
 
-  // Setup hamburger and mobile dropdown toggles
+  // Hamburger and mobile dropdown toggles
   const hamburger = document.querySelector(".hamburger");
   const navContent = document.querySelector(".nav-content");
   if (hamburger && navContent) {
@@ -387,162 +488,20 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Add Row button event listener (if exists)
-  const addRowBtn = document.getElementById("addRowBtn");
-  if (addRowBtn) {
-    addRowBtn.addEventListener("click", addRow);
-  }
-
-  // Initialize drag and drop on existing rows
-  makeRowsDraggable();
-});
-
-// ======================================================
-// ======= NOTIFICATION & EMAIL FUNCTIONS =============
-// ======================================================
-
-function showNotification(message) {
-  console.log("showNotification called with message:", message);
-  const popup = document.getElementById("notification");
-  if (popup) {
-    popup.textContent = message;
-    popup.style.display = "block";
-    setTimeout(() => {
-      popup.style.display = "none";
-    }, 3000);
-  }
-  const notifList = document.getElementById("notification-list");
-  if (notifList) {
-    const div = document.createElement("div");
-    div.className = "notification-item";
-    div.textContent = message;
-    const dismissBtn = document.createElement("button");
-    dismissBtn.textContent = "✖";
-    dismissBtn.onclick = function () {
-      div.remove();
-    };
-    div.appendChild(dismissBtn);
-    notifList.appendChild(div);
-  }
-}
-
-
-// ======================================================
-// ======= NOTIFICATION & EMAIL FUNCTIONS =============
-// ======================================================
-
-function showNotification(message) {
-  console.log("showNotification called with message:", message);
-  // Display the popup notification (assumes an element with id "notification" exists)
-  const popup = document.getElementById("notification");
-  if (popup) {
-    popup.textContent = message;
-    popup.style.display = "block";
-    // Hide the popup after 3 seconds
-    setTimeout(() => {
-      popup.style.display = "none";
-    }, 3000);
-  }
-
-  // Append the notification to the notification list (assumes an element with id "notification-list")
-  const notifList = document.getElementById("notification-list");
-  if (notifList) {
-    // Optionally clear previous notifications:
-    // notifList.innerHTML = "";
-    const div = document.createElement("div");
-    div.className = "notification-item";
-    div.textContent = message;
-    // Create a dismiss button for the notification
-    const dismissBtn = document.createElement("button");
-    dismissBtn.textContent = "✖";
-    // Remove default button styling for a cleaner look (adjust as needed)
-    dismissBtn.style.border = "none";
-    dismissBtn.style.background = "transparent";
-    dismissBtn.style.cursor = "pointer";
-    dismissBtn.onclick = function () {
-      div.remove();
-    };
-    div.appendChild(dismissBtn);
-    notifList.appendChild(div);
-  }
-}
-
-function sendEmailNotification(message) {
-  const role = localStorage.getItem("role");
-  // Check if the user is staff or admin.
-  if (role === "staff" || role === "admin") {
-    // Use staffEmail for staff and ownerEmail for admin.
-    const emailAddress = (role === "staff")
-      ? localStorage.getItem("staffEmail")
-      : localStorage.getItem("ownerEmail");
-    if (emailAddress) {
-      emailjs.send("service_o5dqsd4", "template_setn93r", {
-        to_email: emailAddress,
-        message: message,
-      }).then(function (response) {
-        console.log("Email sent!", response.status, response.text);
-      }, function (error) {
-        console.error("Failed to send email:", error);
-      });
-    }
-  }
-}
-
-// Instead of displaying the notification automatically via hover,
-// add a click event listener on the notification icon/container:
-document.addEventListener("DOMContentLoaded", function () {
+  // Notification toggle
   const notifIcon = document.querySelector(".notification-hover-container");
   const notifContainer = document.getElementById("notification-container");
   if (notifIcon && notifContainer) {
     notifIcon.addEventListener("click", function (e) {
       e.preventDefault();
-      // Toggle display between block and none
-      if (notifContainer.style.display === "block") {
-        notifContainer.style.display = "none";
-      } else {
-        notifContainer.style.display = "block";
-      }
+      notifContainer.style.display = notifContainer.style.display === "block" ? "none" : "block";
     });
   }
-});
 
-
-// ======================================================
-// ======= ADMIN-ONLY INPUT SETUP (UNCHANGED) ===========
-// ======================================================
-
-function setupAdminInput(inputId) {
-  const adminEmails = ["admin@admin", "superadmin@admin", "anotheradmin@admin"];
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  input.addEventListener("change", function () {
-    const value = input.value.trim().toLowerCase();
-    if (adminEmails.includes(value)) {
-      console.log("Admin credentials recognized.");
-      enableAdminControls();
-      localStorage.setItem("role", "admin");
-    } else {
-      console.log("Admin credentials not recognized.");
-      disableAdminControls();
-    }
-  });
-}
-
-function enableAdminControls() {
-  const adminElements = document.querySelectorAll(".admin-only");
-  adminElements.forEach(el => el.style.display = "block");
-}
-
-function disableAdminControls() {
-  const adminElements = document.querySelectorAll(".admin-only");
-  adminElements.forEach(el => el.style.display = "none");
-}
-
-document.addEventListener("DOMContentLoaded", function () {
+  // Setup admin input if exists
   setupAdminInput("adminCode");
-});
 
-document.addEventListener("DOMContentLoaded", function () {
+  // Logout button functionality
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", function () {
@@ -551,36 +510,52 @@ document.addEventListener("DOMContentLoaded", function () {
       window.location.href = "/login.html";
     });
   }
-});
 
-document.addEventListener("DOMContentLoaded", function () {
+  // Role-based modifications
   const role = localStorage.getItem("role");
-  
-  if (role === "staff" || role === "student") {
-      const maintenanceLink = document.getElementById("maintenanceLink");
-      if (maintenanceLink) {
-          maintenanceLink.remove(); // Removes the maintenance tab for staff and students
+if (role === "staff" || role === "student") {
+  const maintenanceLink = document.getElementById("maintenanceLink");
+  if (maintenanceLink) {
+    maintenanceLink.remove();
+  }
+}
+if (role === "student") {
+  const homeLink = document.getElementById("homeLink");
+  if (homeLink) {
+    homeLink.querySelector("a").href = "Student.html";
+  }
+}
+if (role === "admin") {
+  const homeLink = document.getElementById("homeLink");
+  if (homeLink) {
+    homeLink.querySelector("a").href = "owner.html";
+  }
+}
+
+  // Initialize drag and drop on rows
+  makeRowsDraggable();
+});
+function showPushNotification(message) {
+  if (!("Notification" in window)) {
+    console.error("This browser does not support desktop notifications.");
+    return;
+  }
+
+  // Check if notification permissions have already been granted
+  if (Notification.permission === "granted") {
+    new Notification("Maintenance Alert", {
+      body: message,
+      icon: "/img/notification-icon.png" // Optional: add an icon URL
+    });
+  } else if (Notification.permission !== "denied") {
+    // Otherwise, ask the user for permission
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        new Notification("Maintenance Alert", {
+          body: message,
+          icon: "/img/notification-icon.png"
+        });
       }
+    });
   }
-});
-
-
-document.addEventListener("DOMContentLoaded", function () {
-  const role = localStorage.getItem("role");
-  if (role === "student") {
-    const homeLink = document.getElementById("homeLink");
-    if (homeLink) {
-      homeLink.querySelector("a").href = "/Student.html";
-    }
-  }
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-  const role = localStorage.getItem("role");
-  if (role === "admin") {
-    const homeLink = document.getElementById("homeLink");
-    if (homeLink) {
-      homeLink.querySelector("a").href = "/owner.html";
-    }
-  }
-});
+}

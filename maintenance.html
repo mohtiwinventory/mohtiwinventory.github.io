@@ -12,6 +12,13 @@
     if (!localStorage.getItem("role")) {
       window.location.href = "login.html";
     }
+    const role = localStorage.getItem("role");
+      if (role === "staff" || role === "student") {
+        const maintenanceLink = document.getElementById("maintenanceLink");
+        if (maintenanceLink) {
+          maintenanceLink.remove();
+        }
+}
   </script>
 </head>
 <body>
@@ -92,8 +99,9 @@
       <!-- Textarea for pasted Excel data -->
       <textarea id="excelData" placeholder="Paste your Excel data here, separated by tabs or commas..."></textarea>
       <button onclick="insertTable()">Insert Table</button>
-      
+    </div>
       <!-- The table -->
+    <div class="job-order">
       <table id="activityTable">
         <thead>
             <tr>
@@ -120,14 +128,16 @@
   </div>
 
   <!-- EmailJS -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script type="text/javascript">
-    (function(){
+  <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js">
+</script>
+<script type="text/javascript">
+   (function(){
       emailjs.init({
-        publicKey: "Vl_DNuJxc0jNOFa6L",
+        publicKey: "DnwwPqkATU2LJzBVY",
       });
-    })();
-  </script>
+   })();
+</script>
   <script src="script.js" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
