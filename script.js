@@ -325,17 +325,17 @@ function addRow() {
     editBtn.textContent = editBtn.textContent === "Edit" ? "Lock" : "Edit";
   };
 
+  // ---- Modified Remove Button: Now stores deleted row history ----
   const removeBtn = document.createElement("button");
-    removeBtn.textContent = "Remove";
-    removeBtn.className = "remove-btn";
-    removeBtn.onclick = function () {
-      if (confirm("Are you sure you want to remove this row?")) {
-        newRow.remove();
-        saveTableData();
-      }
-    };
-  
-
+  removeBtn.textContent = "Remove";
+  removeBtn.className = "remove-btn";
+  removeBtn.onclick = function () {
+    if (confirm("Are you sure you want to remove this row?")) {
+      addDeletedRowHistory(newRow); // Save deleted row data
+      newRow.remove();
+      saveTableData();
+    }
+  };
 
   actionTd.appendChild(editBtn);
   actionTd.appendChild(removeBtn);
@@ -401,26 +401,28 @@ function loadTableData() {
       });
       actionTd.appendChild(editBtn);
 
+      // ---- Modified Remove Button in loadTableData ----
       const removeBtn = document.createElement("a");
-        removeBtn.textContent = "❌ Remove Row";
-        removeBtn.href = "#";
-        removeBtn.className = "remove-btn";
-        removeBtn.addEventListener("click", function (e) {
-          e.preventDefault();
-          if (confirm("Are you sure you want to remove this row?")) {
-            const tbody = document.getElementById("tableBody");
-            const rows = Array.from(tbody.children);
-            const index = rows.indexOf(newRow);
-            if (index > -1) {
-              let tableData = JSON.parse(localStorage.getItem("tableData")) || [];
-              tableData.splice(index, 1);
-              localStorage.setItem("tableData", JSON.stringify(tableData));
-              newRow.remove();
-              saveTableData();
-              showNotification("Row removed successfully");
-            }
+      removeBtn.textContent = "❌ Remove Row";
+      removeBtn.href = "#";
+      removeBtn.className = "remove-btn";
+      removeBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (confirm("Are you sure you want to remove this row?")) {
+          const tbody = document.getElementById("tableBody");
+          const rows = Array.from(tbody.children);
+          const index = rows.indexOf(newRow);
+          if (index > -1) {
+            let tableData = JSON.parse(localStorage.getItem("tableData")) || [];
+            tableData.splice(index, 1);
+            localStorage.setItem("tableData", JSON.stringify(tableData));
+            addDeletedRowHistory(newRow); // Save deleted row data
+            newRow.remove();
+            saveTableData();
+            showNotification("Row removed successfully");
           }
-        });
+        }
+      });
       
       actionTd.appendChild(removeBtn);
       newRow.appendChild(actionTd);
@@ -512,22 +514,74 @@ function insertTable() {
       tr.appendChild(td);
     });
     const actionTd = document.createElement("td");
+    // ---- Modified Remove Button in insertTable ----
     const removeBtn = document.createElement("a");
-      removeBtn.textContent = "❌ Remove Row";
-      removeBtn.href = "#";
-      removeBtn.className = "remove-btn";
-      removeBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        if (confirm("Are you sure you want to remove this row?")) {
-          tr.remove();
-        }
-      });
+    removeBtn.textContent = "❌ Remove Row";
+    removeBtn.href = "#";
+    removeBtn.className = "remove-btn";
+    removeBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (confirm("Are you sure you want to remove this row?")) {
+        addDeletedRowHistory(tr); // Save deleted row data
+        tr.remove();
+      }
+    });
     actionTd.appendChild(removeBtn);
     tr.appendChild(actionTd);
     tbody.appendChild(tr);
   });
   saveTableData();
   makeRowsDraggable();
+}
+
+// ======================================================
+// ======= DELETED ROW HISTORY FUNCTIONS ================
+// ======================================================
+
+// Saves a deleted row's data along with the deletion timestamp.
+function addDeletedRowHistory(row) {
+  // Capture the text content from all cells except the last (action cell)
+  const cells = row.querySelectorAll("td");
+  let rowData = [];
+  for (let i = 0; i < cells.length - 1; i++) {
+    rowData.push(cells[i].textContent.trim());
+  }
+  const deletedAt = new Date().getTime();
+  let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
+  history.push({ rowData, deletedAt });
+  localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
+}
+
+// Clears any history entries older than 30 days.
+function clearOldDeletedHistory() {
+  const now = new Date().getTime();
+  const thirtyDays = 30 * 24 * 60 * 60 * 1000; // milliseconds in 30 days
+  let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
+  history = history.filter(item => now - item.deletedAt < thirtyDays);
+  localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
+}
+
+// Displays the history of deleted rows in a container with id "deletedHistoryContainer".
+// If no such container exists, the history is logged to the console.
+function showDeletedHistory() {
+  clearOldDeletedHistory();
+  const history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
+  const container = document.getElementById("deletedHistoryContainer");
+  if (container) {
+    container.innerHTML = "";
+    if (history.length === 0) {
+      container.innerHTML = "<p>No deleted rows history.</p>";
+    } else {
+      history.forEach(item => {
+        const dateStr = new Date(item.deletedAt).toLocaleDateString();
+        const div = document.createElement("div");
+        div.textContent = `Deleted on ${dateStr}: ${item.rowData.join(" | ")}`;
+        container.appendChild(div);
+      });
+    }
+  } else {
+    console.log("Deleted Rows History:", history);
+  }
 }
 
 // ======================================================
