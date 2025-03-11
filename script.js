@@ -584,6 +584,16 @@ function showDeletedHistory() {
   }
 }
 
+// Deletes the entire deleted rows history.
+function deleteDeletedHistory() {
+  localStorage.removeItem("deletedRowsHistory");
+  const container = document.getElementById("deletedHistoryContainer");
+  if (container) {
+    container.innerHTML = "<p>No deleted rows history.</p>";
+  }
+  console.log("Deleted rows history cleared.");
+}
+
 // ======================================================
 // ======= NOTIFICATION & EMAIL FUNCTIONS =============
 // ======================================================
