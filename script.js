@@ -598,18 +598,22 @@ function showPushNotification(message) {
 
 // Saves a deleted row's data along with the deletion timestamp.
 // Saves a deleted row's data along with the deletion timestamp.
+// Saves a deleted row's data along with the deletion timestamp.
 function addDeletedRowHistory(row) {
-  // Capture the text content from all input cells before the row is removed
+  // Capture the text content from all cells except the last (action cell)
   const cells = row.querySelectorAll("td");
   let rowData = [];
   cells.forEach((cell, index) => {
     const input = cell.querySelector("input");
     if (input) {
+      // If the cell contains an input element, get its value
       rowData.push(input.value.trim());
     } else {
+      // Otherwise, get the cell's text content directly
       rowData.push(cell.textContent.trim());
     }
   });
+
   const deletedAt = new Date().getTime();
   let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
   history.push({ rowData, deletedAt });
