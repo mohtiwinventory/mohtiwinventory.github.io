@@ -327,16 +327,15 @@ function addRow() {
 
   // ---- Modified Remove Button: Now stores deleted row history ----
   const removeBtn = document.createElement("button");
-  removeBtn.textContent = "Remove";
-  removeBtn.className = "remove-btn";
-  removeBtn.onclick = function () {
-    if (confirm("Are you sure you want to remove this row?")) {
-      addDeletedRowHistory(newRow); // Save deleted row data
-      newRow.remove();
-      saveTableData();
-    }
-  };
-
+removeBtn.textContent = "Remove";
+removeBtn.className = "remove-btn";
+removeBtn.onclick = function () {
+  if (confirm("Are you sure you want to remove this row?")) {
+    addDeletedRowHistory(newRow); // Save the row data before removing
+    newRow.remove();
+    saveTableData();
+  }
+};
   actionTd.appendChild(editBtn);
   actionTd.appendChild(removeBtn);
   newRow.appendChild(actionTd);
@@ -402,36 +401,17 @@ function loadTableData() {
       actionTd.appendChild(editBtn);
 
       // ---- Modified Remove Button in loadTableData ----
-      const removeBtn = document.createElement("a");
-      removeBtn.textContent = "❌ Remove Row";
-      removeBtn.href = "#";
-      removeBtn.className = "remove-btn";
-      removeBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        if (confirm("Are you sure you want to remove this row?")) {
-          const tbody = document.getElementById("tableBody");
-          const rows = Array.from(tbody.children);
-          const index = rows.indexOf(newRow);
-          if (index > -1) {
-            let tableData = JSON.parse(localStorage.getItem("tableData")) || [];
-            tableData.splice(index, 1);
-            localStorage.setItem("tableData", JSON.stringify(tableData));
-            addDeletedRowHistory(newRow); // Save deleted row data
-            newRow.remove();
-            saveTableData();
-            showNotification("Row removed successfully");
-          }
-        }
-      });
-      
-      actionTd.appendChild(removeBtn);
-      newRow.appendChild(actionTd);
-      tbody.appendChild(newRow);
-      checkDueDate(newRow, rowData[4]);
-    });
-    makeRowsDraggable();
+const removeBtn = document.createElement("button");
+removeBtn.textContent = "Remove";
+removeBtn.className = "remove-btn";
+removeBtn.onclick = function () {
+  if (confirm("Are you sure you want to remove this row?")) {
+    addDeletedRowHistory(newRow); // Save the row data before removing
+    newRow.remove();
+    saveTableData();
+    showNotification("Row removed successfully");
   }
-}
+};
 
 function checkAllDueDates() {
   const tbody = document.getElementById("tableBody");
@@ -515,24 +495,19 @@ function insertTable() {
     });
     const actionTd = document.createElement("td");
     // ---- Modified Remove Button in insertTable ----
-    const removeBtn = document.createElement("a");
-    removeBtn.textContent = "❌ Remove Row";
-    removeBtn.href = "#";
-    removeBtn.className = "remove-btn";
-    removeBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      if (confirm("Are you sure you want to remove this row?")) {
-        addDeletedRowHistory(tr); // Save deleted row data
-        tr.remove();
-      }
-    });
-    actionTd.appendChild(removeBtn);
-    tr.appendChild(actionTd);
-    tbody.appendChild(tr);
-  });
-  saveTableData();
-  makeRowsDraggable();
-}
+const removeBtn = document.createElement("a");
+removeBtn.textContent = "❌ Remove Row";
+removeBtn.href = "#";
+removeBtn.className = "remove-btn";
+removeBtn.addEventListener("click", function (e) {
+  e.preventDefault();
+  if (confirm("Are you sure you want to remove this row?")) {
+    addDeletedRowHistory(tr); // Save the row data before removing
+    tr.remove();
+    saveTableData();
+    showNotification("Row removed successfully");
+  }
+});
 
 // ======================================================
 // ======= NOTIFICATION & EMAIL FUNCTIONS =============
@@ -622,13 +597,19 @@ function showPushNotification(message) {
 // ======================================================
 
 // Saves a deleted row's data along with the deletion timestamp.
+// Saves a deleted row's data along with the deletion timestamp.
 function addDeletedRowHistory(row) {
-  // Capture the text content from all cells except the last (action cell)
+  // Capture the text content from all input cells before the row is removed
   const cells = row.querySelectorAll("td");
   let rowData = [];
-  for (let i = 0; i < cells.length - 1; i++) {
-    rowData.push(cells[i].textContent.trim());
-  }
+  cells.forEach((cell, index) => {
+    const input = cell.querySelector("input");
+    if (input) {
+      rowData.push(input.value.trim());
+    } else {
+      rowData.push(cell.textContent.trim());
+    }
+  });
   const deletedAt = new Date().getTime();
   let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
   history.push({ rowData, deletedAt });
