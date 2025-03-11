@@ -182,7 +182,6 @@ function makeRowsDraggable() {
     row.addEventListener("dragend", dragEnd);
   });
 }
-
 let dragSrcRow = null;
 function dragStart(e) {
   dragSrcRow = this;
@@ -262,16 +261,14 @@ function saveTableData() {
   const data = [];
   tbody.querySelectorAll("tr").forEach((row) => {
     const rowData = [];
-    // For each input cell, capture its value.
     row.querySelectorAll("input").forEach((input) => {
       rowData.push(input.value);
     });
-    // Only add row data if at least one cell is nonempty.
+    // Only save if at least one cell is nonempty
     if (rowData.some(cell => cell.trim() !== "")) {
       data.push(rowData);
     }
   });
-  
   if (data.length > 0) {
     localStorage.setItem("tableData", JSON.stringify(data));
   } else {
@@ -288,11 +285,10 @@ function addRow() {
     console.error("Table body not found");
     return;
   }
-  
-  // Create a new row element
   const newRow = document.createElement("tr");
+  newRow.dataset.editing = "false";
   
-  // Define the 8 cells for the row
+  // Define the 8 columns with types and placeholders
   const cellData = [
     { type: "text", placeholder: "Enter activity" },
     { type: "text", placeholder: "Enter frequency" },
@@ -304,19 +300,17 @@ function addRow() {
     { type: "text", placeholder: "Enter Status" }
   ];
   
-  // For each cell, create a td with an input inside it
+  // Create each cell with an input element
   cellData.forEach(cell => {
     const td = document.createElement("td");
     const input = document.createElement("input");
     input.type = cell.type;
     input.placeholder = cell.placeholder;
     input.style.textAlign = "center";
-    // Mark some fields as required
     if (cell.placeholder === "Enter Location" || cell.placeholder === "Enter Status") {
       input.required = true;
     }
-    input.disabled = true; // Start as disabled (read-only)
-    // For Due Date, update table on change
+    input.disabled = true; // Start disabled
     if (cell.placeholder === "Due Date") {
       input.addEventListener("change", () => {
         checkDueDate(newRow, input.value);
@@ -329,10 +323,8 @@ function addRow() {
     newRow.appendChild(td);
   });
   
-  // Create the Actions cell with Edit and Remove buttons
+  // Create the Actions cell
   const actionTd = document.createElement("td");
-  
-  // Edit button: toggles input disabled state
   const editBtn = document.createElement("button");
   editBtn.textContent = "Edit";
   editBtn.className = "edit-btn";
@@ -341,25 +333,24 @@ function addRow() {
     inputs.forEach(input => {
       input.disabled = !input.disabled;
     });
-    editBtn.textContent = editBtn.textContent === "Edit" ? "Lock" : "Edit";
+    editBtn.textContent = (editBtn.textContent === "Edit") ? "Lock" : "Edit";
   };
   actionTd.appendChild(editBtn);
   
-  // Remove button: saves deleted row data, removes the row, then saves table data
   const removeBtn = document.createElement("button");
   removeBtn.textContent = "Remove";
   removeBtn.className = "remove-btn";
   removeBtn.onclick = function () {
     if (confirm("Are you sure you want to remove this row?")) {
-      addDeletedRowHistory(newRow); // Save the row data for history
+      addDeletedRowHistory(newRow);
       newRow.remove();
       saveTableData();
       showNotification("Row removed successfully");
     }
   };
   actionTd.appendChild(removeBtn);
-  
   newRow.appendChild(actionTd);
+  
   tbody.appendChild(newRow);
   saveTableData();
   makeRowsDraggable();
@@ -379,8 +370,7 @@ function loadTableData() {
     data.forEach((rowData) => {
       const newRow = document.createElement("tr");
       newRow.dataset.editing = "false";
-      
-      // Create cells for the first 8 data items
+      // Create cells for 8 columns
       for (let i = 0; i < 8; i++) {
         const td = document.createElement("td");
         const input = document.createElement("input");
@@ -388,11 +378,11 @@ function loadTableData() {
         input.type = (i === 3 || i === 4) ? "date" : "text";
         input.value = rowData[i] || "";
         input.disabled = true;
-        // Mark required fields
+        // Make Location (col 6) and Status (col 8) required
         if (i === 5 || i === 7) {
           input.required = true;
         }
-        // For Due Date, update and re-save on change
+        // For Due Date, add change listener to update and save
         if (i === 4) {
           input.addEventListener("change", () => {
             const parsedDate = new Date(input.value);
@@ -408,10 +398,8 @@ function loadTableData() {
         td.appendChild(input);
         newRow.appendChild(td);
       }
-      
-      // Create the Actions cell
+      // Create actions cell with Edit and Remove buttons
       const actionTd = document.createElement("td");
-      
       const editBtn = document.createElement("button");
       editBtn.textContent = "Edit";
       editBtn.className = "edit-btn";
@@ -429,7 +417,6 @@ function loadTableData() {
         }
       };
       actionTd.appendChild(editBtn);
-      
       const removeBtn = document.createElement("button");
       removeBtn.textContent = "Remove";
       removeBtn.className = "remove-btn";
@@ -442,14 +429,12 @@ function loadTableData() {
         }
       };
       actionTd.appendChild(removeBtn);
-      
       newRow.appendChild(actionTd);
       tbody.appendChild(newRow);
     });
     makeRowsDraggable();
   }
 }
-
 
 function checkAllDueDates() {
   const tbody = document.getElementById("tableBody");
@@ -638,28 +623,25 @@ function showPushNotification(message) {
 function addDeletedRowHistory(row) {
   const cells = row.querySelectorAll("td");
   let rowData = [];
-
-  cells.forEach((cell) => {
+  cells.forEach(cell => {
     const input = cell.querySelector("input");
     if (input) {
-      rowData.push(input.value.trim()); // Capture input values
+      rowData.push(input.value.trim());
     } else {
-      rowData.push(cell.textContent.trim()); // Capture plain text
+      rowData.push(cell.textContent.trim());
     }
   });
-
   const deletedAt = new Date().getTime();
   let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
   history.push({ rowData, deletedAt });
   localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
-  console.log("Deleted row history saved:", rowData); // Debugging line
+  console.log("Deleted row history saved:", rowData);
 }
-
-
+    
 // Clears any history entries older than 30 days.
 function clearOldDeletedHistory() {
   const now = new Date().getTime();
-  const thirtyDays = 30 * 24 * 60 * 60 * 1000; // milliseconds in 30 days
+  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
   let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
   history = history.filter(item => now - item.deletedAt < thirtyDays);
   localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
@@ -682,8 +664,6 @@ function showDeletedHistory() {
         const dateStr = new Date(item.deletedAt).toLocaleString();
         const div = document.createElement("div");
         div.textContent = `Deleted on ${dateStr}: ${item.rowData.join(" | ")}`;
-
-        // Add delete button for each entry
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "❌";
         deleteBtn.style.marginLeft = "10px";
@@ -691,7 +671,6 @@ function showDeletedHistory() {
           deleteSingleHistory(index);
         };
         div.appendChild(deleteBtn);
-
         container.appendChild(div);
       });
     }
@@ -710,13 +689,12 @@ function deleteDeletedHistory() {
   console.log("Deleted rows history cleared.");
 }
 
-// Deletes a specific deleted row history entry.
 function deleteSingleHistory(index) {
   let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
   if (index >= 0 && index < history.length) {
     history.splice(index, 1);
     localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
-    showDeletedHistory(); // Refresh the history list after deletion
+    showDeletedHistory();
   }
 }
 
