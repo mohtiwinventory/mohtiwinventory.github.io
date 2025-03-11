@@ -84,13 +84,10 @@
           let email = document.getElementById("email").value.trim().toLowerCase();
           let role = document.querySelector('input[name="role"]:checked').value;
 
-          // If the email matches an admin email, override role to "admin"
+          // Override role to "admin" if the email matches an admin email
           if (adminEmails.includes(email)) {
             role = "admin";
-          }
-
-          // For non-admin roles, enforce that the email ends with the school domain.
-          if (
+          } else if (
             (role === "staff" || role === "student") &&
             !email.endsWith("@maryourhelp-cebu.edu.ph")
           ) {
@@ -104,7 +101,7 @@
           sessionStorage.setItem("userEmail", email);
           sessionStorage.setItem("userRole", role);
 
-          // Generate and send OTP via EmailJS for all users including admin.
+          // Generate and send OTP via EmailJS for all users (including admin)
           const otp = generateOTP();
           sessionStorage.setItem("otp", otp);
 
@@ -135,12 +132,10 @@
           loginError.style.display = "none";
           loginMessage.style.display = "none";
 
-          const enteredCode = document
-            .getElementById("codeInput")
-            .value.trim();
+          const enteredCode = document.getElementById("codeInput").value.trim();
+          const storedOTP = sessionStorage.getItem("otp");
           const role = sessionStorage.getItem("userRole");
           const email = sessionStorage.getItem("userEmail");
-          const storedOTP = sessionStorage.getItem("otp");
 
           if (enteredCode === storedOTP) {
             loginMessage.textContent = "OTP verified successfully!";
