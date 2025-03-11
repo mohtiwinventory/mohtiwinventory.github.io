@@ -617,3 +617,83 @@ function showPushNotification(message) {
     });
   }
 }
+// ======================================================
+// ======= DELETED ROW HISTORY FUNCTIONS ================
+// ======================================================
+
+// Saves a deleted row's data along with the deletion timestamp.
+function addDeletedRowHistory(row) {
+  // Capture the text content from all cells except the last (action cell)
+  const cells = row.querySelectorAll("td");
+  let rowData = [];
+  for (let i = 0; i < cells.length - 1; i++) {
+    rowData.push(cells[i].textContent.trim());
+  }
+  const deletedAt = new Date().getTime();
+  let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
+  history.push({ rowData, deletedAt });
+  localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
+}
+
+// Clears any history entries older than 30 days.
+function clearOldDeletedHistory() {
+  const now = new Date().getTime();
+  const thirtyDays = 30 * 24 * 60 * 60 * 1000; // milliseconds in 30 days
+  let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
+  history = history.filter(item => now - item.deletedAt < thirtyDays);
+  localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
+}
+
+// Displays the history of deleted rows in a container with id "deletedHistoryContainer".
+// If no such container exists, the history is logged to the console.
+function showDeletedHistory() {
+  clearOldDeletedHistory();
+  const history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
+  const container = document.getElementById("deletedHistoryContainer");
+  if (container) {
+    container.innerHTML = "";
+    if (history.length === 0) {
+      container.innerHTML = "<p>No deleted rows history.</p>";
+    } else {
+      history.forEach((item, index) => {
+        const dateStr = new Date(item.deletedAt).toLocaleDateString();
+        const div = document.createElement("div");
+        div.textContent = `Deleted on ${dateStr}: ${item.rowData.join(" | ")}`;
+
+        // Add delete button for each entry
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "❌";
+        deleteBtn.style.marginLeft = "10px";
+        deleteBtn.onclick = function () {
+          deleteSingleHistory(index);
+        };
+        div.appendChild(deleteBtn);
+
+        container.appendChild(div);
+      });
+    }
+  } else {
+    console.log("Deleted Rows History:", history);
+  }
+}
+
+// Deletes the entire deleted rows history.
+function deleteDeletedHistory() {
+  localStorage.removeItem("deletedRowsHistory");
+  const container = document.getElementById("deletedHistoryContainer");
+  if (container) {
+    container.innerHTML = "<p>No deleted rows history.</p>";
+  }
+  console.log("Deleted rows history cleared.");
+}
+
+// Deletes a specific deleted row history entry.
+function deleteSingleHistory(index) {
+  let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
+  if (index >= 0 && index < history.length) {
+    history.splice(index, 1);
+    localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
+    showDeletedHistory(); // Refresh the history list after deletion
+  }
+}
+
