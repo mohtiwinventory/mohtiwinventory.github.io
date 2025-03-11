@@ -16,14 +16,14 @@
           publicKey: "DnwwPqkATU2LJzBVY", // Replace with your actual public key
         });
       })();
-      // Generate a random 6-digit OTP (for non-admin users)
+
+      // Generate a random 6-digit OTP
       function generateOTP() {
         return Math.floor(100000 + Math.random() * 900000).toString();
       }
-      // Predefined admin codes (all converted to lowercase)
-      const predefinedAdminCodes = ["admin2023", "admin2024", "admin2025"].map(
-        (code) => code.toLowerCase()
-      );
+
+      // List of approved admin emails (all in lowercase)
+      const adminEmails = ["mohtiwinventory@gmail.com"];
     </script>
     <style>
       .hidden {
@@ -75,7 +75,7 @@
         const loginError = document.getElementById("loginError");
         const loginMessage = document.getElementById("loginMessage");
 
-        // Step 1: Handle email submission and send code (or prompt for admin code)
+        // Step 1: Handle email submission and send OTP
         loginForm.addEventListener("submit", function (e) {
           e.preventDefault();
           loginError.style.display = "none";
@@ -84,54 +84,29 @@
           let email = document.getElementById("email").value.trim().toLowerCase();
           let role = document.querySelector('input[name="role"]:checked').value;
 
-          console.log("Initial role:", role, "Email entered:", email);
-
-          // List of approved admin emails (all in lowercase)
-          const adminEmails = [
-            "mohtiwinventory@gmail.com",
-            "admin@admin",
-            "ps@admin"
-          ];
-
           // If the email matches an admin email, override role to "admin"
           if (adminEmails.includes(email)) {
             role = "admin";
-            console.log("Admin override applied. Role set to:", role);
           }
 
-          // For non-admin roles, enforce that the email ends with "@maryourhelp-cebu.edu.ph"
+          // For non-admin roles, enforce that the email ends with the school domain.
           if (
             (role === "staff" || role === "student") &&
-            !email.endsWith("@maryourhelp-cebu.edu.ph") &&
-            !adminEmails.includes(email)
+            !email.endsWith("@maryourhelp-cebu.edu.ph")
           ) {
             loginError.textContent =
               "Invalid email domain. Please use your school email.";
             loginError.style.display = "block";
-            console.log("Email domain check failed for staff/student.");
             return;
           }
-
-          console.log("Final Role:", role, "Email:", email);
 
           // Store email and role in sessionStorage for use in Step 2
           sessionStorage.setItem("userEmail", email);
           sessionStorage.setItem("userRole", role);
 
-          // For admin, do NOT send OTP; instead, prompt for admin code.
-          if (role === "admin") {
-            loginMessage.textContent = "Please enter your admin code.";
-            loginMessage.style.display = "block";
-            document.getElementById("step1").classList.add("hidden");
-            document.getElementById("step2").classList.remove("hidden");
-            return;
-          }
-
-          // For non-admin users, generate and send OTP via EmailJS.
+          // Generate and send OTP via EmailJS for all users including admin.
           const otp = generateOTP();
           sessionStorage.setItem("otp", otp);
-
-          console.log("Generated OTP:", otp);
 
           emailjs
             .send("service_o5dqsd4", "template_setn93r", {
@@ -140,21 +115,21 @@
             })
             .then(
               function (response) {
-                console.log("Email sent!", response.status, response.text);
-                loginMessage.textContent = "OTP sent! Please check your email.";
+                loginMessage.textContent =
+                  "OTP sent! Please check your email.";
                 loginMessage.style.display = "block";
                 document.getElementById("step1").classList.add("hidden");
                 document.getElementById("step2").classList.remove("hidden");
               },
               function (error) {
-                console.error("Failed to send OTP:", error);
-                loginError.textContent = "Failed to send OTP. Please try again.";
+                loginError.textContent =
+                  "Failed to send OTP. Please try again.";
                 loginError.style.display = "block";
               }
             );
         });
 
-        // Step 2: Handle code verification (admin code for admin; OTP for others)
+        // Step 2: Handle OTP verification for all users
         codeForm.addEventListener("submit", function (e) {
           e.preventDefault();
           loginError.style.display = "none";
@@ -162,40 +137,27 @@
 
           const enteredCode = document
             .getElementById("codeInput")
-            .value.trim()
-            .toLowerCase();
+            .value.trim();
           const role = sessionStorage.getItem("userRole");
           const email = sessionStorage.getItem("userEmail");
+          const storedOTP = sessionStorage.getItem("otp");
 
-          if (role === "admin") {
-            // Check if the entered code is in the array of approved admin codes.
-            if (predefinedAdminCodes.includes(enteredCode)) {
-              loginMessage.textContent = "Admin code verified successfully!";
-              loginMessage.style.display = "block";
-              localStorage.setItem("role", "admin");
+          if (enteredCode === storedOTP) {
+            loginMessage.textContent = "OTP verified successfully!";
+            loginMessage.style.display = "block";
+            localStorage.setItem("role", role);
+            if (role === "admin") {
               localStorage.setItem("adminEmail", email);
-              window.location.href = "/owner.html"; // Use leading slash to redirect correctly
+              window.location.href = "/owner.html";
+            } else if (role === "staff") {
+              localStorage.setItem("staffEmail", email);
+              window.location.href = "/Staff.html";
             } else {
-              loginError.textContent = "Incorrect admin code. Please try again.";
-              loginError.style.display = "block";
+              window.location.href = "/Student.html";
             }
           } else {
-            // For non-admin roles, verify the OTP.
-            const storedOTP = sessionStorage.getItem("otp");
-            if (enteredCode === storedOTP) {
-              loginMessage.textContent = "OTP verified successfully!";
-              loginMessage.style.display = "block";
-              localStorage.setItem("role", role);
-              if (role === "staff") {
-                localStorage.setItem("staffEmail", email);
-                window.location.href = "/Staff.html";
-              } else {
-                window.location.href = "/Student.html";
-              }
-            } else {
-              loginError.textContent = "Incorrect code. Please try again.";
-              loginError.style.display = "block";
-            }
+            loginError.textContent = "Incorrect code. Please try again.";
+            loginError.style.display = "block";
           }
         });
       });
