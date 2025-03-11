@@ -256,37 +256,43 @@ Due Date: ${formattedDueDate}`;
   }
 }
 
+// Saves the current table data to localStorage
 function saveTableData() {
   const tbody = document.getElementById("tableBody");
   const data = [];
   tbody.querySelectorAll("tr").forEach((row) => {
     const rowData = [];
+    // For each input cell, capture its value.
     row.querySelectorAll("input").forEach((input) => {
       rowData.push(input.value);
     });
-    if (rowData.some((cell) => cell.trim() !== "")) {
+    // Only add row data if at least one cell is nonempty.
+    if (rowData.some(cell => cell.trim() !== "")) {
       data.push(rowData);
     }
   });
-
+  
   if (data.length > 0) {
     localStorage.setItem("tableData", JSON.stringify(data));
   } else {
     localStorage.removeItem("tableData");
   }
-
   checkAllDueDates();
-  console.log("Table data saved:", data); // Debugging line
+  console.log("Table data saved:", data);
 }
 
-
-// Adds a new row to the table, then saves the data and re-enables drag/drop.
-// Adds a new row to the table, then saves the data and re-enables drag/drop.
+// Adds a new row to the table and saves the data
 function addRow() {
   const tbody = document.getElementById("tableBody");
+  if (!tbody) {
+    console.error("Table body not found");
+    return;
+  }
+  
+  // Create a new row element
   const newRow = document.createElement("tr");
   
-  // Define the cells with type and placeholder.
+  // Define the 8 cells for the row
   const cellData = [
     { type: "text", placeholder: "Enter activity" },
     { type: "text", placeholder: "Enter frequency" },
@@ -298,19 +304,19 @@ function addRow() {
     { type: "text", placeholder: "Enter Status" }
   ];
   
-  // Create cells.
+  // For each cell, create a td with an input inside it
   cellData.forEach(cell => {
     const td = document.createElement("td");
     const input = document.createElement("input");
     input.type = cell.type;
     input.placeholder = cell.placeholder;
     input.style.textAlign = "center";
-    // Make Location and Status required.
+    // Mark some fields as required
     if (cell.placeholder === "Enter Location" || cell.placeholder === "Enter Status") {
       input.required = true;
     }
-    input.disabled = true; // Initially disable editing.
-    // For Due Date, update and re-save on change.
+    input.disabled = true; // Start as disabled (read-only)
+    // For Due Date, update table on change
     if (cell.placeholder === "Due Date") {
       input.addEventListener("change", () => {
         checkDueDate(newRow, input.value);
@@ -323,27 +329,29 @@ function addRow() {
     newRow.appendChild(td);
   });
   
-  // Create Actions cell (Edit and Remove buttons).
+  // Create the Actions cell with Edit and Remove buttons
   const actionTd = document.createElement("td");
   
+  // Edit button: toggles input disabled state
   const editBtn = document.createElement("button");
   editBtn.textContent = "Edit";
   editBtn.className = "edit-btn";
   editBtn.onclick = function () {
     const inputs = newRow.querySelectorAll("input");
-    // Toggle disabled status for inputs.
-    inputs.forEach(input => input.disabled = !input.disabled);
-    // Toggle button text.
+    inputs.forEach(input => {
+      input.disabled = !input.disabled;
+    });
     editBtn.textContent = editBtn.textContent === "Edit" ? "Lock" : "Edit";
   };
   actionTd.appendChild(editBtn);
   
+  // Remove button: saves deleted row data, removes the row, then saves table data
   const removeBtn = document.createElement("button");
   removeBtn.textContent = "Remove";
   removeBtn.className = "remove-btn";
   removeBtn.onclick = function () {
     if (confirm("Are you sure you want to remove this row?")) {
-      addDeletedRowHistory(newRow); // Save the row data before removing
+      addDeletedRowHistory(newRow); // Save the row data for history
       newRow.remove();
       saveTableData();
       showNotification("Row removed successfully");
@@ -352,24 +360,27 @@ function addRow() {
   actionTd.appendChild(removeBtn);
   
   newRow.appendChild(actionTd);
-  
   tbody.appendChild(newRow);
   saveTableData();
   makeRowsDraggable();
 }
 
-// Loads table data from localStorage and rebuilds the table.
+// Loads table data from localStorage and rebuilds the table
 function loadTableData() {
   const savedData = localStorage.getItem("tableData");
+  const tbody = document.getElementById("tableBody");
+  if (!tbody) {
+    console.error("Table body not found");
+    return;
+  }
+  tbody.innerHTML = "";
   if (savedData) {
     const data = JSON.parse(savedData);
-    const tbody = document.getElementById("tableBody");
-    tbody.innerHTML = "";
     data.forEach((rowData) => {
       const newRow = document.createElement("tr");
       newRow.dataset.editing = "false";
       
-      // Create cells from saved data.
+      // Create cells for the first 8 data items
       for (let i = 0; i < 8; i++) {
         const td = document.createElement("td");
         const input = document.createElement("input");
@@ -377,11 +388,11 @@ function loadTableData() {
         input.type = (i === 3 || i === 4) ? "date" : "text";
         input.value = rowData[i] || "";
         input.disabled = true;
-        // Set required for specific cells.
+        // Mark required fields
         if (i === 5 || i === 7) {
           input.required = true;
         }
-        // For Due Date, update on change.
+        // For Due Date, update and re-save on change
         if (i === 4) {
           input.addEventListener("change", () => {
             const parsedDate = new Date(input.value);
@@ -398,7 +409,7 @@ function loadTableData() {
         newRow.appendChild(td);
       }
       
-      // Create the Actions cell.
+      // Create the Actions cell
       const actionTd = document.createElement("td");
       
       const editBtn = document.createElement("button");
@@ -424,7 +435,7 @@ function loadTableData() {
       removeBtn.className = "remove-btn";
       removeBtn.onclick = function () {
         if (confirm("Are you sure you want to remove this row?")) {
-          addDeletedRowHistory(newRow); // Save deleted row data before removal
+          addDeletedRowHistory(newRow);
           newRow.remove();
           saveTableData();
           showNotification("Row removed successfully");
@@ -438,6 +449,7 @@ function loadTableData() {
     makeRowsDraggable();
   }
 }
+
 
 function checkAllDueDates() {
   const tbody = document.getElementById("tableBody");
