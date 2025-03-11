@@ -331,6 +331,7 @@
   .job-order th {
     background-color: rgba(43, 88, 235, 0.83);
     padding: 0.6rem 1rem;
+    color: #fff;
     text-align: left;
   }
   .job-order td {
