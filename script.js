@@ -264,19 +264,21 @@ function saveTableData() {
     row.querySelectorAll("input").forEach((input) => {
       rowData.push(input.value);
     });
-    if (rowData.some(cell => cell.trim() !== "")) {
+    if (rowData.some((cell) => cell.trim() !== "")) {
       data.push(rowData);
     }
   });
-  
+
   if (data.length > 0) {
     localStorage.setItem("tableData", JSON.stringify(data));
   } else {
     localStorage.removeItem("tableData");
   }
-  
+
   checkAllDueDates();
+  console.log("Table data saved:", data); // Debugging line
 }
+
 
 function addRow() {
   const tbody = document.getElementById("tableBody");
@@ -327,15 +329,17 @@ function addRow() {
 
   // ---- Modified Remove Button: Now stores deleted row history ----
   const removeBtn = document.createElement("button");
-removeBtn.textContent = "Remove";
-removeBtn.className = "remove-btn";
-removeBtn.onclick = function () {
-  if (confirm("Are you sure you want to remove this row?")) {
-    addDeletedRowHistory(newRow); // Save the row data before removing
-    newRow.remove();
-    saveTableData();
-  }
-};
+  removeBtn.textContent = "Remove";
+  removeBtn.className = "remove-btn";
+  removeBtn.onclick = function () {
+    if (confirm("Are you sure you want to remove this row?")) {
+      addDeletedRowHistory(newRow); // Save the row data before removing
+      newRow.remove();
+      saveTableData(); // Save the updated table after removal
+      showNotification("Row removed successfully");
+    }
+  };
+
   actionTd.appendChild(editBtn);
   actionTd.appendChild(removeBtn);
   newRow.appendChild(actionTd);
@@ -408,7 +412,7 @@ removeBtn.onclick = function () {
   if (confirm("Are you sure you want to remove this row?")) {
     addDeletedRowHistory(newRow); // Save the row data before removing
     newRow.remove();
-    saveTableData();
+    saveTableData(); // Save the updated table after removal
     showNotification("Row removed successfully");
   }
 };
@@ -597,20 +601,16 @@ function showPushNotification(message) {
 // ======================================================
 
 // Saves a deleted row's data along with the deletion timestamp.
-// Saves a deleted row's data along with the deletion timestamp.
-// Saves a deleted row's data along with the deletion timestamp.
 function addDeletedRowHistory(row) {
-  // Capture the text content from all cells except the last (action cell)
   const cells = row.querySelectorAll("td");
   let rowData = [];
-  cells.forEach((cell, index) => {
+
+  cells.forEach((cell) => {
     const input = cell.querySelector("input");
     if (input) {
-      // If the cell contains an input element, get its value
-      rowData.push(input.value.trim());
+      rowData.push(input.value.trim()); // Capture input values
     } else {
-      // Otherwise, get the cell's text content directly
-      rowData.push(cell.textContent.trim());
+      rowData.push(cell.textContent.trim()); // Capture plain text
     }
   });
 
@@ -618,7 +618,9 @@ function addDeletedRowHistory(row) {
   let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
   history.push({ rowData, deletedAt });
   localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
+  console.log("Deleted row history saved:", rowData); // Debugging line
 }
+
 
 // Clears any history entries older than 30 days.
 function clearOldDeletedHistory() {
@@ -631,6 +633,8 @@ function clearOldDeletedHistory() {
 
 // Displays the history of deleted rows in a container with id "deletedHistoryContainer".
 // If no such container exists, the history is logged to the console.
+// Displays the history of deleted rows in a container with id "deletedHistoryContainer".
+// If no such container exists, the history is logged to the console.
 function showDeletedHistory() {
   clearOldDeletedHistory();
   const history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
@@ -641,7 +645,7 @@ function showDeletedHistory() {
       container.innerHTML = "<p>No deleted rows history.</p>";
     } else {
       history.forEach((item, index) => {
-        const dateStr = new Date(item.deletedAt).toLocaleDateString();
+        const dateStr = new Date(item.deletedAt).toLocaleString();
         const div = document.createElement("div");
         div.textContent = `Deleted on ${dateStr}: ${item.rowData.join(" | ")}`;
 
