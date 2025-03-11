@@ -182,6 +182,7 @@ function makeRowsDraggable() {
     row.addEventListener("dragend", dragEnd);
   });
 }
+
 let dragSrcRow = null;
 function dragStart(e) {
   dragSrcRow = this;
@@ -255,7 +256,6 @@ Due Date: ${formattedDueDate}`;
   }
 }
 
-// Saves the current table data to localStorage
 function saveTableData() {
   const tbody = document.getElementById("tableBody");
   const data = [];
@@ -264,31 +264,24 @@ function saveTableData() {
     row.querySelectorAll("input").forEach((input) => {
       rowData.push(input.value);
     });
-    // Only save if at least one cell is nonempty
     if (rowData.some(cell => cell.trim() !== "")) {
       data.push(rowData);
     }
   });
+  
   if (data.length > 0) {
     localStorage.setItem("tableData", JSON.stringify(data));
   } else {
     localStorage.removeItem("tableData");
   }
+  
   checkAllDueDates();
-  console.log("Table data saved:", data);
 }
 
-// Adds a new row to the table and saves the data
 function addRow() {
   const tbody = document.getElementById("tableBody");
-  if (!tbody) {
-    console.error("Table body not found");
-    return;
-  }
   const newRow = document.createElement("tr");
-  newRow.dataset.editing = "true"; // new row is editable by default
 
-  // Define the 8 columns with types and placeholders
   const cellData = [
     { type: "text", placeholder: "Enter activity" },
     { type: "text", placeholder: "Enter frequency" },
@@ -300,8 +293,7 @@ function addRow() {
     { type: "text", placeholder: "Enter Status" }
   ];
 
-  // Create each cell with an input element
-  cellData.forEach(cell => {
+  cellData.forEach((cell) => {
     const td = document.createElement("td");
     const input = document.createElement("input");
     input.type = cell.type;
@@ -310,7 +302,7 @@ function addRow() {
     if (cell.placeholder === "Enter Location" || cell.placeholder === "Enter Status") {
       input.required = true;
     }
-    input.disabled = false; // enable input immediately
+    input.disabled = true;
     if (cell.placeholder === "Due Date") {
       input.addEventListener("change", () => {
         checkDueDate(newRow, input.value);
@@ -323,42 +315,29 @@ function addRow() {
     newRow.appendChild(td);
   });
 
-  // Create the Actions cell with Edit and Remove buttons
   const actionTd = document.createElement("td");
   const editBtn = document.createElement("button");
-  editBtn.textContent = "Lock"; // row is in edit mode initially
+  editBtn.textContent = "Edit";
   editBtn.className = "edit-btn";
   editBtn.onclick = function () {
     const inputs = newRow.querySelectorAll("input");
-    if (newRow.dataset.editing === "true") {
-      // Lock the row: disable inputs
-      inputs.forEach(input => {
-        input.disabled = true;
-      });
-      newRow.dataset.editing = "false";
-      editBtn.textContent = "Edit";
-    } else {
-      // Unlock the row: enable inputs
-      inputs.forEach(input => {
-        input.disabled = false;
-      });
-      newRow.dataset.editing = "true";
-      editBtn.textContent = "Lock";
-    }
+    inputs.forEach(input => input.disabled = !input.disabled);
+    editBtn.textContent = editBtn.textContent === "Edit" ? "Lock" : "Edit";
   };
-  actionTd.appendChild(editBtn);
 
+  // ---- Modified Remove Button: Now stores deleted row history ----
   const removeBtn = document.createElement("button");
   removeBtn.textContent = "Remove";
   removeBtn.className = "remove-btn";
   removeBtn.onclick = function () {
     if (confirm("Are you sure you want to remove this row?")) {
-      addDeletedRowHistory(newRow);
+      addDeletedRowHistory(newRow); // Save deleted row data
       newRow.remove();
       saveTableData();
-      showNotification("Row removed successfully");
     }
   };
+
+  actionTd.appendChild(editBtn);
   actionTd.appendChild(removeBtn);
   newRow.appendChild(actionTd);
 
@@ -367,21 +346,15 @@ function addRow() {
   makeRowsDraggable();
 }
 
-// Loads table data from localStorage and rebuilds the table
 function loadTableData() {
   const savedData = localStorage.getItem("tableData");
-  const tbody = document.getElementById("tableBody");
-  if (!tbody) {
-    console.error("Table body not found");
-    return;
-  }
-  tbody.innerHTML = "";
   if (savedData) {
     const data = JSON.parse(savedData);
+    const tbody = document.getElementById("tableBody");
+    tbody.innerHTML = "";
     data.forEach((rowData) => {
       const newRow = document.createElement("tr");
       newRow.dataset.editing = "false";
-      // Create cells for 8 columns
       for (let i = 0; i < 8; i++) {
         const td = document.createElement("td");
         const input = document.createElement("input");
@@ -389,11 +362,9 @@ function loadTableData() {
         input.type = (i === 3 || i === 4) ? "date" : "text";
         input.value = rowData[i] || "";
         input.disabled = true;
-        // Make Location (col 6) and Status (col 8) required
         if (i === 5 || i === 7) {
           input.required = true;
         }
-        // For Due Date, add change listener to update and save
         if (i === 4) {
           input.addEventListener("change", () => {
             const parsedDate = new Date(input.value);
@@ -409,15 +380,16 @@ function loadTableData() {
         td.appendChild(input);
         newRow.appendChild(td);
       }
-      // Create actions cell with Edit and Remove buttons
       const actionTd = document.createElement("td");
-      const editBtn = document.createElement("button");
+      const editBtn = document.createElement("a");
       editBtn.textContent = "Edit";
+      editBtn.href = "#";
       editBtn.className = "edit-btn";
-      editBtn.onclick = function (e) {
+      editBtn.addEventListener("click", function (e) {
         e.preventDefault();
+        const isEditing = newRow.dataset.editing === "true";
         const inputs = newRow.querySelectorAll("input");
-        if (newRow.dataset.editing === "true") {
+        if (isEditing) {
           inputs.forEach(input => input.disabled = true);
           newRow.dataset.editing = "false";
           editBtn.textContent = "Edit";
@@ -426,22 +398,36 @@ function loadTableData() {
           newRow.dataset.editing = "true";
           editBtn.textContent = "Lock";
         }
-      };
+      });
       actionTd.appendChild(editBtn);
-      const removeBtn = document.createElement("button");
-      removeBtn.textContent = "Remove";
+
+      // ---- Modified Remove Button in loadTableData ----
+      const removeBtn = document.createElement("a");
+      removeBtn.textContent = "❌ Remove Row";
+      removeBtn.href = "#";
       removeBtn.className = "remove-btn";
-      removeBtn.onclick = function () {
+      removeBtn.addEventListener("click", function (e) {
+        e.preventDefault();
         if (confirm("Are you sure you want to remove this row?")) {
-          addDeletedRowHistory(newRow);
-          newRow.remove();
-          saveTableData();
-          showNotification("Row removed successfully");
+          const tbody = document.getElementById("tableBody");
+          const rows = Array.from(tbody.children);
+          const index = rows.indexOf(newRow);
+          if (index > -1) {
+            let tableData = JSON.parse(localStorage.getItem("tableData")) || [];
+            tableData.splice(index, 1);
+            localStorage.setItem("tableData", JSON.stringify(tableData));
+            addDeletedRowHistory(newRow); // Save deleted row data
+            newRow.remove();
+            saveTableData();
+            showNotification("Row removed successfully");
+          }
         }
-      };
+      });
+      
       actionTd.appendChild(removeBtn);
       newRow.appendChild(actionTd);
       tbody.appendChild(newRow);
+      checkDueDate(newRow, rowData[4]);
     });
     makeRowsDraggable();
   }
@@ -529,19 +515,24 @@ function insertTable() {
     });
     const actionTd = document.createElement("td");
     // ---- Modified Remove Button in insertTable ----
-const removeBtn = document.createElement("a");
-removeBtn.textContent = "❌ Remove Row";
-removeBtn.href = "#";
-removeBtn.className = "remove-btn";
-removeBtn.addEventListener("click", function (e) {
-  e.preventDefault();
-  if (confirm("Are you sure you want to remove this row?")) {
-    addDeletedRowHistory(tr); // Save the row data before removing
-    tr.remove();
-    saveTableData();
-    showNotification("Row removed successfully");
-  }
-});
+    const removeBtn = document.createElement("a");
+    removeBtn.textContent = "❌ Remove Row";
+    removeBtn.href = "#";
+    removeBtn.className = "remove-btn";
+    removeBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (confirm("Are you sure you want to remove this row?")) {
+        addDeletedRowHistory(tr); // Save deleted row data
+        tr.remove();
+      }
+    });
+    actionTd.appendChild(removeBtn);
+    tr.appendChild(actionTd);
+    tbody.appendChild(tr);
+  });
+  saveTableData();
+  makeRowsDraggable();
+}
 
 // ======================================================
 // ======= NOTIFICATION & EMAIL FUNCTIONS =============
@@ -626,86 +617,3 @@ function showPushNotification(message) {
     });
   }
 }
-// ======================================================
-// ======= DELETED ROW HISTORY FUNCTIONS ================
-// ======================================================
-
-// Saves a deleted row's data along with the deletion timestamp.
-function addDeletedRowHistory(row) {
-  const cells = row.querySelectorAll("td");
-  let rowData = [];
-  cells.forEach(cell => {
-    const input = cell.querySelector("input");
-    if (input) {
-      rowData.push(input.value.trim());
-    } else {
-      rowData.push(cell.textContent.trim());
-    }
-  });
-  const deletedAt = new Date().getTime();
-  let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
-  history.push({ rowData, deletedAt });
-  localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
-  console.log("Deleted row history saved:", rowData);
-}
-    
-// Clears any history entries older than 30 days.
-function clearOldDeletedHistory() {
-  const now = new Date().getTime();
-  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-  let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
-  history = history.filter(item => now - item.deletedAt < thirtyDays);
-  localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
-}
-
-// Displays the history of deleted rows in a container with id "deletedHistoryContainer".
-// If no such container exists, the history is logged to the console.
-// Displays the history of deleted rows in a container with id "deletedHistoryContainer".
-// If no such container exists, the history is logged to the console.
-function showDeletedHistory() {
-  clearOldDeletedHistory();
-  const history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
-  const container = document.getElementById("deletedHistoryContainer");
-  if (container) {
-    container.innerHTML = "";
-    if (history.length === 0) {
-      container.innerHTML = "<p>No deleted rows history.</p>";
-    } else {
-      history.forEach((item, index) => {
-        const dateStr = new Date(item.deletedAt).toLocaleString();
-        const div = document.createElement("div");
-        div.textContent = `Deleted on ${dateStr}: ${item.rowData.join(" | ")}`;
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "❌";
-        deleteBtn.style.marginLeft = "10px";
-        deleteBtn.onclick = function () {
-          deleteSingleHistory(index);
-        };
-        div.appendChild(deleteBtn);
-        container.appendChild(div);
-      });
-    }
-  } else {
-    console.log("Deleted Rows History:", history);
-  }
-}
-
-// Deletes the entire deleted rows history.
-function deleteDeletedHistory() {
-  localStorage.removeItem("deletedRowsHistory");
-  const container = document.getElementById("deletedHistoryContainer");
-  if (container) {
-    container.innerHTML = "<p>No deleted rows history.</p>";
-  }
-  console.log("Deleted rows history cleared.");
-}
-
-function deleteSingleHistory(index) {
-  let history = JSON.parse(localStorage.getItem("deletedRowsHistory")) || [];
-  if (index >= 0 && index < history.length) {
-    history.splice(index, 1);
-    localStorage.setItem("deletedRowsHistory", JSON.stringify(history));
-    showDeletedHistory();
-  }
-}
-
