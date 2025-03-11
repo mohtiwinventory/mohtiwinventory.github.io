@@ -286,8 +286,8 @@ function addRow() {
     return;
   }
   const newRow = document.createElement("tr");
-  newRow.dataset.editing = "false";
-  
+  newRow.dataset.editing = "true"; // new row is editable by default
+
   // Define the 8 columns with types and placeholders
   const cellData = [
     { type: "text", placeholder: "Enter activity" },
@@ -299,7 +299,7 @@ function addRow() {
     { type: "text", placeholder: "Enter Job Order" },
     { type: "text", placeholder: "Enter Status" }
   ];
-  
+
   // Create each cell with an input element
   cellData.forEach(cell => {
     const td = document.createElement("td");
@@ -310,7 +310,7 @@ function addRow() {
     if (cell.placeholder === "Enter Location" || cell.placeholder === "Enter Status") {
       input.required = true;
     }
-    input.disabled = true; // Start disabled
+    input.disabled = false; // enable input immediately
     if (cell.placeholder === "Due Date") {
       input.addEventListener("change", () => {
         checkDueDate(newRow, input.value);
@@ -322,21 +322,32 @@ function addRow() {
     td.appendChild(input);
     newRow.appendChild(td);
   });
-  
-  // Create the Actions cell
+
+  // Create the Actions cell with Edit and Remove buttons
   const actionTd = document.createElement("td");
   const editBtn = document.createElement("button");
-  editBtn.textContent = "Edit";
+  editBtn.textContent = "Lock"; // row is in edit mode initially
   editBtn.className = "edit-btn";
   editBtn.onclick = function () {
     const inputs = newRow.querySelectorAll("input");
-    inputs.forEach(input => {
-      input.disabled = !input.disabled;
-    });
-    editBtn.textContent = (editBtn.textContent === "Edit") ? "Lock" : "Edit";
+    if (newRow.dataset.editing === "true") {
+      // Lock the row: disable inputs
+      inputs.forEach(input => {
+        input.disabled = true;
+      });
+      newRow.dataset.editing = "false";
+      editBtn.textContent = "Edit";
+    } else {
+      // Unlock the row: enable inputs
+      inputs.forEach(input => {
+        input.disabled = false;
+      });
+      newRow.dataset.editing = "true";
+      editBtn.textContent = "Lock";
+    }
   };
   actionTd.appendChild(editBtn);
-  
+
   const removeBtn = document.createElement("button");
   removeBtn.textContent = "Remove";
   removeBtn.className = "remove-btn";
@@ -350,7 +361,7 @@ function addRow() {
   };
   actionTd.appendChild(removeBtn);
   newRow.appendChild(actionTd);
-  
+
   tbody.appendChild(newRow);
   saveTableData();
   makeRowsDraggable();
