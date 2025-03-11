@@ -280,8 +280,14 @@ function saveTableData() {
 
 function addRow() {
   const tbody = document.getElementById("tableBody");
+  if (!tbody) {
+    console.error("Table body not found");
+    return;
+  }
   const newRow = document.createElement("tr");
-
+  newRow.dataset.editing = "false";
+  
+  // Define the 8 columns with types and placeholders
   const cellData = [
     { type: "text", placeholder: "Enter activity" },
     { type: "text", placeholder: "Enter frequency" },
@@ -292,8 +298,9 @@ function addRow() {
     { type: "text", placeholder: "Enter Job Order" },
     { type: "text", placeholder: "Enter Status" }
   ];
-
-  cellData.forEach((cell) => {
+  
+  // Create each cell with an input element
+  cellData.forEach(cell => {
     const td = document.createElement("td");
     const input = document.createElement("input");
     input.type = cell.type;
@@ -302,7 +309,7 @@ function addRow() {
     if (cell.placeholder === "Enter Location" || cell.placeholder === "Enter Status") {
       input.required = true;
     }
-    input.disabled = true;
+    input.disabled = true; // Start disabled
     if (cell.placeholder === "Due Date") {
       input.addEventListener("change", () => {
         checkDueDate(newRow, input.value);
@@ -314,37 +321,43 @@ function addRow() {
     td.appendChild(input);
     newRow.appendChild(td);
   });
-
+  
+  // Create the Actions cell
   const actionTd = document.createElement("td");
   const editBtn = document.createElement("button");
   editBtn.textContent = "Edit";
   editBtn.className = "edit-btn";
   editBtn.onclick = function () {
     const inputs = newRow.querySelectorAll("input");
-    inputs.forEach(input => input.disabled = !input.disabled);
-    editBtn.textContent = editBtn.textContent === "Edit" ? "Lock" : "Edit";
+    inputs.forEach(input => {
+      input.disabled = !input.disabled;
+    });
+    editBtn.textContent = (editBtn.textContent === "Edit") ? "Lock" : "Edit";
   };
-
-  // ---- Modified Remove Button: Now stores deleted row history ----
+  actionTd.appendChild(editBtn);
+  
   const removeBtn = document.createElement("button");
   removeBtn.textContent = "Remove";
   removeBtn.className = "remove-btn";
   removeBtn.onclick = function () {
     if (confirm("Are you sure you want to remove this row?")) {
-      addDeletedRowHistory(newRow); // Save deleted row data
+      addDeletedRowHistory(newRow);
       newRow.remove();
       saveTableData();
+      showNotification("Row removed successfully");
     }
   };
-
-  actionTd.appendChild(editBtn);
   actionTd.appendChild(removeBtn);
   newRow.appendChild(actionTd);
-
+  
   tbody.appendChild(newRow);
   saveTableData();
   makeRowsDraggable();
 }
+
+// Expose addRow to the global scope so inline onclick handlers can find it.
+window.addRow = addRow;
+
 
 function loadTableData() {
   const savedData = localStorage.getItem("tableData");
