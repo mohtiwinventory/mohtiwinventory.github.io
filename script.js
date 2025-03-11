@@ -280,10 +280,13 @@ function saveTableData() {
 }
 
 
+// Adds a new row to the table, then saves the data and re-enables drag/drop.
+// Adds a new row to the table, then saves the data and re-enables drag/drop.
 function addRow() {
   const tbody = document.getElementById("tableBody");
   const newRow = document.createElement("tr");
-
+  
+  // Define the cells with type and placeholder.
   const cellData = [
     { type: "text", placeholder: "Enter activity" },
     { type: "text", placeholder: "Enter frequency" },
@@ -294,17 +297,20 @@ function addRow() {
     { type: "text", placeholder: "Enter Job Order" },
     { type: "text", placeholder: "Enter Status" }
   ];
-
-  cellData.forEach((cell) => {
+  
+  // Create cells.
+  cellData.forEach(cell => {
     const td = document.createElement("td");
     const input = document.createElement("input");
     input.type = cell.type;
     input.placeholder = cell.placeholder;
     input.style.textAlign = "center";
+    // Make Location and Status required.
     if (cell.placeholder === "Enter Location" || cell.placeholder === "Enter Status") {
       input.required = true;
     }
-    input.disabled = true;
+    input.disabled = true; // Initially disable editing.
+    // For Due Date, update and re-save on change.
     if (cell.placeholder === "Due Date") {
       input.addEventListener("change", () => {
         checkDueDate(newRow, input.value);
@@ -316,18 +322,22 @@ function addRow() {
     td.appendChild(input);
     newRow.appendChild(td);
   });
-
+  
+  // Create Actions cell (Edit and Remove buttons).
   const actionTd = document.createElement("td");
+  
   const editBtn = document.createElement("button");
   editBtn.textContent = "Edit";
   editBtn.className = "edit-btn";
   editBtn.onclick = function () {
     const inputs = newRow.querySelectorAll("input");
+    // Toggle disabled status for inputs.
     inputs.forEach(input => input.disabled = !input.disabled);
+    // Toggle button text.
     editBtn.textContent = editBtn.textContent === "Edit" ? "Lock" : "Edit";
   };
-
-  // ---- Modified Remove Button: Now stores deleted row history ----
+  actionTd.appendChild(editBtn);
+  
   const removeBtn = document.createElement("button");
   removeBtn.textContent = "Remove";
   removeBtn.className = "remove-btn";
@@ -335,20 +345,20 @@ function addRow() {
     if (confirm("Are you sure you want to remove this row?")) {
       addDeletedRowHistory(newRow); // Save the row data before removing
       newRow.remove();
-      saveTableData(); // Save the updated table after removal
+      saveTableData();
       showNotification("Row removed successfully");
     }
   };
-
-  actionTd.appendChild(editBtn);
   actionTd.appendChild(removeBtn);
+  
   newRow.appendChild(actionTd);
-
+  
   tbody.appendChild(newRow);
   saveTableData();
   makeRowsDraggable();
 }
 
+// Loads table data from localStorage and rebuilds the table.
 function loadTableData() {
   const savedData = localStorage.getItem("tableData");
   if (savedData) {
@@ -358,6 +368,8 @@ function loadTableData() {
     data.forEach((rowData) => {
       const newRow = document.createElement("tr");
       newRow.dataset.editing = "false";
+      
+      // Create cells from saved data.
       for (let i = 0; i < 8; i++) {
         const td = document.createElement("td");
         const input = document.createElement("input");
@@ -365,9 +377,11 @@ function loadTableData() {
         input.type = (i === 3 || i === 4) ? "date" : "text";
         input.value = rowData[i] || "";
         input.disabled = true;
+        // Set required for specific cells.
         if (i === 5 || i === 7) {
           input.required = true;
         }
+        // For Due Date, update on change.
         if (i === 4) {
           input.addEventListener("change", () => {
             const parsedDate = new Date(input.value);
@@ -383,16 +397,17 @@ function loadTableData() {
         td.appendChild(input);
         newRow.appendChild(td);
       }
+      
+      // Create the Actions cell.
       const actionTd = document.createElement("td");
-      const editBtn = document.createElement("a");
+      
+      const editBtn = document.createElement("button");
       editBtn.textContent = "Edit";
-      editBtn.href = "#";
       editBtn.className = "edit-btn";
-      editBtn.addEventListener("click", function (e) {
+      editBtn.onclick = function (e) {
         e.preventDefault();
-        const isEditing = newRow.dataset.editing === "true";
         const inputs = newRow.querySelectorAll("input");
-        if (isEditing) {
+        if (newRow.dataset.editing === "true") {
           inputs.forEach(input => input.disabled = true);
           newRow.dataset.editing = "false";
           editBtn.textContent = "Edit";
@@ -401,21 +416,28 @@ function loadTableData() {
           newRow.dataset.editing = "true";
           editBtn.textContent = "Lock";
         }
-      });
+      };
       actionTd.appendChild(editBtn);
-
-      // ---- Modified Remove Button in loadTableData ----
-const removeBtn = document.createElement("button");
-removeBtn.textContent = "Remove";
-removeBtn.className = "remove-btn";
-removeBtn.onclick = function () {
-  if (confirm("Are you sure you want to remove this row?")) {
-    addDeletedRowHistory(newRow); // Save the row data before removing
-    newRow.remove();
-    saveTableData(); // Save the updated table after removal
-    showNotification("Row removed successfully");
+      
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "Remove";
+      removeBtn.className = "remove-btn";
+      removeBtn.onclick = function () {
+        if (confirm("Are you sure you want to remove this row?")) {
+          addDeletedRowHistory(newRow); // Save deleted row data before removal
+          newRow.remove();
+          saveTableData();
+          showNotification("Row removed successfully");
+        }
+      };
+      actionTd.appendChild(removeBtn);
+      
+      newRow.appendChild(actionTd);
+      tbody.appendChild(newRow);
+    });
+    makeRowsDraggable();
   }
-};
+}
 
 function checkAllDueDates() {
   const tbody = document.getElementById("tableBody");
