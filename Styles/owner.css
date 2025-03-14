@@ -184,6 +184,7 @@ h1 {
 .Maintext span {
   font-size: 2.2rem;
   font-weight: bold;
+  padding-left: 1rem;
 }
 
 /* Staff Lists */

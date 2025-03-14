@@ -163,7 +163,28 @@
   .about p {
     padding: 20px 0;
     font-size: 150%;
+<<<<<<< HEAD
+    text-align: justify;
+  }  
+
+  .float-video {
+    float: left;         /* Floats the video to the left */
+    width: 50%;          /* Adjust as needed */
+    margin: 0 20px 20px 0; /* Space to the right and bottom of the video */
   }
+  
+  /* Clearfix: If you have a footer or other content below,
+     you may need to clear the float so it doesn't overlap. */
+  .about::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+  
+
+=======
+  }
+>>>>>>> parent of 4c02b43 (fixes)
   .content {
     text-align: center;
     padding: 0 10%;
@@ -434,7 +455,12 @@
       font-size: 1.5rem;
     }
     .about p, .contacts p {
+<<<<<<< HEAD
+      font-size: 1.8rem;
+      text-align: justify;
+=======
       font-size: 1rem;
+>>>>>>> parent of 4c02b43 (fixes)
     }
     
     /* Inventory adjustments */

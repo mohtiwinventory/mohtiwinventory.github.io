@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Setup admin input if exists (assuming you have a function for that)
-  setupAdminInput("adminCode");
+  // setupAdminInput("adminCode");
 
   // Logout button functionality
   const logoutBtn = document.getElementById("logoutBtn");
@@ -76,6 +76,8 @@ document.addEventListener("DOMContentLoaded", function () {
       window.location.href = "/login.html";
     });
   }
+
+
 
   // === Initialize Drag and Drop on Rows ===
   makeRowsDraggable();
@@ -630,3 +632,16 @@ function showPushNotification(message) {
     });
   }
 }
+function setupLogoutButton() {
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", function () {
+      localStorage.clear();  // Clears all user data
+      alert("You have been logged out.");
+      window.location.href = "/login.html";  // Redirect to login page
+    });
+  }
+}
+
+// Run the function when the page loads
+document.addEventListener("DOMContentLoaded", setupLogoutButton);
