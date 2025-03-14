@@ -645,3 +645,32 @@ function setupLogoutButton() {
 
 // Run the function when the page loads
 document.addEventListener("DOMContentLoaded", setupLogoutButton);
+
+// Open and Close Modal
+function openModal() {
+  document.getElementById("reportModal").style.display = "block";
+}
+
+function closeModal() {
+  document.getElementById("reportModal").style.display = "none";
+}
+
+// Handle Report Submission
+document.getElementById("reportForm").addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const report = {
+    object: document.getElementById("object").value,
+    location: document.getElementById("location").value,
+    status: document.getElementById("status").value,
+    date: document.getElementById("date").value,
+  };
+
+  // Save report to localStorage for the admin page
+  let reports = JSON.parse(localStorage.getItem("reports")) || [];
+  reports.push(report);
+  localStorage.setItem("reports", JSON.stringify(reports));
+
+  alert("Report submitted successfully!");
+  closeModal();
+});

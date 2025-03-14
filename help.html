@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help - Damage Report System</title>
+  <link rel="stylesheet" href="Styles/style.css">
+  <style>
+    body { font-family: Arial, sans-serif;}
+    h1, h2 { color: #333; padding: 20px;}
+    .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; margin: 20px;}
+    .highlight { background-color: #f9f9f9; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+    ol, ul { margin-left: 20px; }
+    .btn { display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+    .btn:hover { background-color: #0056b3; }
+  </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="LOGO">
+          <a href="https://maryourhelp-cebu.edu.ph/">
+            <img src="/img/361288426_705514794922565_8093013284390417376_n (1).jpg" alt="Logo">
+          </a>
+        </div>
+        <!-- Hamburger icon for mobile -->
+        <div class="hamburger">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <div class="nav-content">
+          <ul>
+            <li id="homeLink"><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li class="dropdown">
+              <a href="inventory.html" class="dropbtn">Inventory</a>
+              <div class="dropdown-content">
+                <a href="/BLDG inventory/auxBldg.html">AUX BLDG</a>
+                <a href="/BLDG inventory/mmBldg.html">MM BLDG</a>
+                <a href="/BLDG inventory/dbBldg.html">DB BLDG</a>
+              </div>
+            </li>
+            <li id="maintenanceLink"><a href="maintenance.html">Maintenance</a></li>
+            <li><a href="help.html">Help</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li>
+              <a href="#">
+                <div class="notification-hover-container">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                    <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/>
+                  </svg>
+                </div>
+                <div id="notification" style="display:none;"></div>
+                <div id="notification-container" style="display:none;">
+                <div id="notification-list"></div>
+              </a>
+            </li>
+            <li>
+              <button id="logoutBtn" class="logout-button">
+                <span class="material-symbols-outlined">logout</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </nav>
+<h1>How to Use the Damage Report System</h1>
+
+<div class="section">
+  <h2>For Students & Staff</h2>
+  <p>The **Damage Report System** allows you to report damaged items in the school.</p>
+  <p>Follow these steps:</p>
+  <ol>
+    <li>Click on the <span class="highlight">"Report an Issue"</span> button in your dashboard.</li>
+    <li>A pop-up form will appear.</li>
+    <li>Fill in the required details:
+      <ul>
+        <li><strong>Object:</strong> Name of the damaged item.</li>
+        <li><strong>Location:</strong> Where the item is located.</li>
+        <li><strong>Status:</strong> Select whether it is <em>Minor Damage, Major Damage, or Needs Immediate Repair.</em></li>
+        <li><strong>Date:</strong> When the damage was noticed.</li>
+      </ul>
+    </li>
+    <li>Click **Submit**. The report will be sent to the **admin** for review.</li>
+  </ol>
+  <p><a href="Student.html" class="btn">Go to Student Dashboard</a></p>
+</div>
+
+<div class="section">
+  <h2>For Admins</h2>
+  <p>The **Admin Panel** allows you to view, resolve, and manage reports.</p>
+  <p>Steps to manage reports:</p>
+  <ol>
+    <li>Go to the <span class="highlight">Admin Reports</span> page.</li>
+    <li>You will see a **list of reported damages** in a table.</li>
+    <li>Each report has two actions:
+      <ul>
+        <li><strong>Resolve:</strong> Marks the issue as resolved and removes it from the list.</li>
+        <li><strong>Delete:</strong> Removes the report from the system.</li>
+      </ul>
+    </li>
+  </ol>
+  <p><a href="admin_reports.html" class="btn">Go to Admin Reports</a></p>
+</div>
+
+<div class="section">
+  <h2>FAQs</h2>
+  <p><strong>Q: Can I edit my report after submitting?</strong></p>
+  <p>A: No, but you can contact the admin if changes are needed.</p>
+
+  <p><strong>Q: Will I be notified when my report is resolved?</strong></p>
+  <p>A: Not yet, but future updates may include email notifications.</p>
+</div>
+
+</body>
+</html>

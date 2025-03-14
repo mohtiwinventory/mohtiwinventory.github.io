@@ -163,7 +163,6 @@
   .about p {
     padding: 20px 0;
     font-size: 150%;
-<<<<<<< HEAD
     text-align: justify;
   }  
 
@@ -181,10 +180,6 @@
     clear: both;
   }
   
-
-=======
-  }
->>>>>>> parent of 4c02b43 (fixes)
   .content {
     text-align: center;
     padding: 0 10%;
@@ -408,6 +403,32 @@
     width: 100%;
     z-index: 10;
   }
+
+   /* Icons */
+   .icon { margin-right: 10px; color: #007bff; }
+
+   /* FAQ Section */
+   .faq {
+     background: #fff;
+     padding: 10px;
+     border-radius: 5px;
+     margin-bottom: 10px;
+     cursor: pointer;
+     border: 1px solid #ddd;
+   }
+   .faq h3 {
+     font-size: 16px;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+   }
+   .faq p {
+     display: none;
+     font-size: 14px;
+     padding-top: 10px;
+     color: #555;
+   }
+   .faq.active p { display: block; }
   
   /* ==========================================================================
      RESPONSIVE STYLES (max-width: 768px)
@@ -455,12 +476,8 @@
       font-size: 1.5rem;
     }
     .about p, .contacts p {
-<<<<<<< HEAD
       font-size: 1.8rem;
       text-align: justify;
-=======
-      font-size: 1rem;
->>>>>>> parent of 4c02b43 (fixes)
     }
     
     /* Inventory adjustments */
