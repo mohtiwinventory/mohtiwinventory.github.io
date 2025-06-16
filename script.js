@@ -1,3 +1,24 @@
+// Firebase App + Firestore modular imports via CDN
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc, getDoc, updateDoc } 
+  from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+// Your web app's Firebase configuration (as you provided)
+const firebaseConfig = {
+  apiKey: "AIzaSyA6dDhSyaRxBnv9cIRaI9-M3ocxANHm62s",
+  authDomain: "mohtiw-web.firebaseapp.com",
+  projectId: "mohtiw-web",
+  storageBucket: "mohtiw-web.firebasestorage.app",
+  messagingSenderId: "188249513580",
+  appId: "1:188249513580:web:8a7a5e002c3a19c1058249",
+  measurementId: "G-EX4JBWFTEM"
+};
+
+// Initialize Firebase & Firestore
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+
 document.addEventListener("DOMContentLoaded", function () {
   // === Request Push Notification Permission ===
   if ("Notification" in window) {
@@ -450,6 +471,7 @@ function loadTableData() {
 
 function checkAllDueDates() {
   const tbody = document.getElementById("tableBody");
+  if (!tbody) return; // 💡 Skip if not on maintenance page
   tbody.querySelectorAll("tr").forEach(row => {
     const dueDateInput = row.cells[4].querySelector("input");
     if (dueDateInput && dueDateInput.value) {
@@ -457,6 +479,7 @@ function checkAllDueDates() {
     }
   });
 }
+
 setInterval(checkAllDueDates, 60000);
 
 // ======================================================
@@ -697,22 +720,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Handle form submission
   if (form) {
-    form.addEventListener("submit", function (e) {
+    form.addEventListener("submit", async function (e) {
       e.preventDefault();
 
       const report = {
-        name: document.getElementById("reporterName").value,
-        role: document.getElementById("reporterRole").value,
-        item: document.getElementById("itemName").value,
-        location: document.getElementById("itemLocation").value,
-        status: document.getElementById("itemStatus").value,
-        date: new Date().toLocaleString(),
+      name: document.getElementById("reporterName").value,
+      role: document.getElementById("reporterRole").value,
+      item: document.getElementById("itemName").value,
+      location: document.getElementById("itemLocation").value,
+      status: "Pending", // Always start with Pending
+      issuedescription: document.getElementById("issueDescription").value,
+      date: new Date().toLocaleString(),
       };
 
-      // Save locally
-      const reports = JSON.parse(localStorage.getItem("reports")) || [];
-      reports.push(report);
-      localStorage.setItem("reports", JSON.stringify(reports));
+
+
+      // Save to Firestore instead of localStorage
+      try {
+        await addDoc(collection(db, "reports"), report);
+        console.log("Report saved to Firestore");
+      } catch (err) {
+        console.error("Firestore error:", err);
+        alert("Failed to save report – please try again.");
+        return;    // abort email/send if save fails
+      }
+
 
       // Format message
       const emailMessage =
@@ -721,23 +753,143 @@ document.addEventListener("DOMContentLoaded", function () {
 Object: ${report.item}
 Location: ${report.location}
 Status: ${report.status}
+Issue Description: ${report.issuedescription}
 Date: ${report.date}
 
 Reported by: ${report.name} (${report.role})`;
 
       // Send via EmailJS
       emailjs.send("service_o5dqsd4", "template_setn93r", {
-        message: emailMessage,
-        to_email: "mohtiwinventory@gmail.com" // Optional: ensure your template supports it
-      }).then(function () {
-        alert("Report submitted and emailed to admin!");
-        modal.style.display = "none";
-        form.reset();
-      }, function (error) {
-        alert("Failed to send email.");
-        console.error("EmailJS error:", error);
-      });
+  message: emailMessage,
+  to_email: "mohtiwinventory@gmail.com"
+})
+.then(function(response) {
+  console.log("✅ EmailJS sent:", response.status, response.text);
+  alert("Report submitted and emailed to admin!");
+  modal.style.display = "none";
+  form.reset();
+}, function(error) {
+  console.error("❌ EmailJS error:", error);
+  alert("Failed to send email. Check console for details.");
+});
+
     });
   }
 });
+
+// Admin Report Management //
+const reportsTbody = document.querySelector("#reportsTable tbody");
+const userRole = localStorage.getItem("role"); // 'admin' or 'student' or 'staff'
+
+const q = query(collection(db, "reports"), orderBy("date", "desc"));
+
+onSnapshot(q, snapshot => {
+  reportsTbody.innerHTML = "";
+  // inside onSnapshot
+snapshot.forEach(docSnap => {
+  const report = docSnap.data();
+  const status = report.status || "Pending";
+  const isAdmin = userRole === "admin";
+  const tr = document.createElement("tr");
+
+  let actionsHTML = "";
+
+  if (isAdmin) {
+    actionsHTML = `
+      <select class="status-dropdown" data-id="${docSnap.id}">
+        <option value="Pending" ${status === "Pending" ? "selected" : ""}>Pending</option>
+        <option value="In Progress" ${status === "In Progress" ? "selected" : ""}>In Progress</option>
+        <option value="Resolved" ${status === "Resolved" ? "selected" : ""}>Resolved</option>
+      </select>
+    `;
+  } else {
+    let color = {
+      "Pending": "red",
+      "In Progress": "orange",
+      "Resolved": "green"
+    }[status] || "gray";
+
+    actionsHTML = `<span style="color: ${color}; font-weight: bold;">${status}</span>`;
+  }
+
+  tr.innerHTML = `
+    <td>${report.name}</td>
+    <td>${report.role}</td>
+    <td>${report.item}</td>
+    <td>${report.location}</td>
+    <td>${status}</td>
+    <td>${new Date(report.date).toLocaleString()}</td>
+    <td>${report.issuedecription}</td>
+    <td class="actions">${actionsHTML}</td>
+  `;
+
+  reportsTbody.appendChild(tr);
+});
+});
+
+
+// Action buttons
+// Listen to changes in dropdown (admin only)
+reportsTbody.addEventListener("change", async (e) => {
+  if (e.target.classList.contains("status-dropdown")) {
+    const newStatus = e.target.value;
+    const id = e.target.dataset.id;
+
+    if (!id) return;
+
+    const docRef = doc(db, "reports", id);
+    if (newStatus === "Resolved") {
+      const reportSnap = await getDoc(docRef);
+      const reportData = reportSnap.data();
+      await addDoc(collection(db, "resolvedReports"), { ...reportData, status: "Resolved" });
+      await deleteDoc(docRef);
+      alert("Marked as resolved and moved to archive.");
+    } else {
+      await updateDoc(docRef, { status: newStatus });
+    }
+  }
+});
+
+// Fetch & Render Resolved Reports
+const resolvedModal = document.getElementById("resolvedModal");
+const resolvedBody = document.getElementById("resolvedReportsBody");
+
+document.getElementById("openResolvedModal").onclick = () => {
+  resolvedModal.style.display = "block";
+  fetchResolvedReports();
+};
+
+document.getElementById("closeResolvedModal").onclick = () => {
+  resolvedModal.style.display = "none";
+};
+
+window.onclick = function(event) {
+  if (event.target === resolvedModal) {
+    resolvedModal.style.display = "none";
+  }
+};
+
+async function fetchResolvedReports() {
+  resolvedBody.innerHTML = "";
+  const q = query(collection(db, "resolvedReports"), orderBy("date", "desc"));
+  onSnapshot(q, (snapshot) => {
+    resolvedBody.innerHTML = "";
+    snapshot.forEach(doc => {
+      const r = doc.data();
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${r.name}</td>
+        <td>${r.role}</td>
+        <td>${r.item}</td>
+        <td>${r.location}</td>
+        <td>${r.status}</td>
+        <td>${new Date(r.date).toLocaleString()}</td>
+        <td>${r.issuedecription}</td>
+      `;
+      resolvedBody.appendChild(row);
+    });
+  });
+}
+
+console.log(localStorage.getItem("role")); // should be "admin", "staff", or "student"
 

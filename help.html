@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data:;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Help - Damage Report System</title>
   <link rel="stylesheet" href="Styles/modal.css">
@@ -146,7 +147,12 @@
   <p><strong>Q: Will I be notified when my report is resolved?</strong></p>
   <p>A: Not yet, but future updates may include email notifications.</p>
 </div>
-
-  <script src="/script.js" defer></script>
+<!-- EmailJS SDK (must come before your script.js) -->
+  <script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
+  defer
+  ></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
