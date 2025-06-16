@@ -646,31 +646,98 @@ function setupLogoutButton() {
 // Run the function when the page loads
 document.addEventListener("DOMContentLoaded", setupLogoutButton);
 
-// Open and Close Modal
-function openModal() {
-  document.getElementById("reportModal").style.display = "block";
-}
+document.addEventListener("DOMContentLoaded", function () {
+  const openModal = document.getElementById("openReportModal");
+  const closeModal = document.getElementById("closeReportModal");
+  const modal = document.getElementById("reportModal");
 
-function closeModal() {
-  document.getElementById("reportModal").style.display = "none";
-}
+  if (openModal && closeModal && modal) {
+    openModal.addEventListener("click", () => {
+      modal.style.display = "block";
+    });
 
-// Handle Report Submission
-document.getElementById("reportForm").addEventListener("submit", function(event) {
-  event.preventDefault();
+    closeModal.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
 
-  const report = {
-    object: document.getElementById("object").value,
-    location: document.getElementById("location").value,
-    status: document.getElementById("status").value,
-    date: document.getElementById("date").value,
-  };
-
-  // Save report to localStorage for the admin page
-  let reports = JSON.parse(localStorage.getItem("reports")) || [];
-  reports.push(report);
-  localStorage.setItem("reports", JSON.stringify(reports));
-
-  alert("Report submitted successfully!");
-  closeModal();
+    window.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+  }
 });
+
+
+// Initialize EmailJS
+emailjs.init("DnwwPqkATU2LJzBVY");
+
+// Modal logic
+document.addEventListener("DOMContentLoaded", function () {
+  const openModal = document.getElementById("openReportModal");
+  const closeModal = document.getElementById("closeReportModal");
+  const modal = document.getElementById("reportModal");
+  const form = document.getElementById("issueReportForm");
+
+  if (openModal && closeModal && modal) {
+    openModal.addEventListener("click", () => {
+      modal.style.display = "block";
+    });
+
+    closeModal.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+
+    window.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+  }
+
+  // Handle form submission
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const report = {
+        name: document.getElementById("reporterName").value,
+        role: document.getElementById("reporterRole").value,
+        item: document.getElementById("itemName").value,
+        location: document.getElementById("itemLocation").value,
+        status: document.getElementById("itemStatus").value,
+        date: new Date().toLocaleString(),
+      };
+
+      // Save locally
+      const reports = JSON.parse(localStorage.getItem("reports")) || [];
+      reports.push(report);
+      localStorage.setItem("reports", JSON.stringify(reports));
+
+      // Format message
+      const emailMessage =
+`New Damage Report Submitted:
+
+Object: ${report.item}
+Location: ${report.location}
+Status: ${report.status}
+Date: ${report.date}
+
+Reported by: ${report.name} (${report.role})`;
+
+      // Send via EmailJS
+      emailjs.send("service_o5dqsd4", "template_setn93r", {
+        message: emailMessage,
+        to_email: "mohtiwinventory@gmail.com" // Optional: ensure your template supports it
+      }).then(function () {
+        alert("Report submitted and emailed to admin!");
+        modal.style.display = "none";
+        form.reset();
+      }, function (error) {
+        alert("Failed to send email.");
+        console.error("EmailJS error:", error);
+      });
+    });
+  }
+});
+

@@ -4,15 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Help - Damage Report System</title>
-  <link rel="stylesheet" href="Styles/style.css">
+  <link rel="stylesheet" href="Styles/modal.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=logout" />
   <style>
-    body { font-family: Arial, sans-serif;}
-    h1, h2 { color: #333; padding: 20px;}
-    .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; margin: 20px;}
-    .highlight { background-color: #f9f9f9; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
-    ol, ul { margin-left: 20px; }
-    .btn { display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-    .btn:hover { background-color: #0056b3; }
+    
   </style>
 </head>
 <body>
@@ -82,7 +77,48 @@
     </li>
     <li>Click **Submit**. The report will be sent to the **admin** for review.</li>
   </ol>
-  <p><a href="Student.html" class="btn">Go to Student Dashboard</a></p>
+  <!-- Replace this link with a button -->
+<p><button id="openReportModal" class="btn">Report an Issue</button></p>
+
+<!-- Modal -->
+<div id="reportModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Report an Issue</h2>
+      <span class="close-button" id="closeReportModal">&times;</span>
+    </div>  
+    <form id="issueReportForm">
+      <label for="reporterName">Your Name:</label>
+      <input type="text" id="reporterName" required>
+    
+      <label for="reporterRole">Your Role:</label>
+      <select id="reporterRole" required>
+        <option value="">-- Select Role --</option>
+        <option value="Student">Student</option>
+        <option value="Staff">Staff</option>
+      </select>
+    
+      <label for="itemName">Item/Object:</label>
+      <input type="text" id="itemName" required>
+    
+      <label for="itemLocation">Location:</label>
+      <input type="text" id="itemLocation" required>
+    
+      <label for="itemStatus">Status:</label>
+      <select id="itemStatus" required>
+        <option value="">-- Select Status --</option>
+        <option value="Minor Damage">Minor Damage</option>
+        <option value="Major Damage">Major Damage</option>
+        <option value="Needs Immediate Repair">Needs Immediate Repair</option>
+      </select>
+    
+      <label for="issueDescription">Issue Description:</label>
+      <textarea id="issueDescription" required></textarea>
+    
+      <button type="submit">Submit Report</button>
+    </form>    
+  </div>
+</div>
 </div>
 
 <div class="section">
@@ -99,7 +135,7 @@
       </ul>
     </li>
   </ol>
-  <p><a href="admin_reports.html" class="btn">Go to Admin Reports</a></p>
+  <p><a href="/admin_report.html" class="btn">Admin Reports</a></p>
 </div>
 
 <div class="section">
@@ -111,5 +147,6 @@
   <p>A: Not yet, but future updates may include email notifications.</p>
 </div>
 
+  <script src="/script.js" defer></script>
 </body>
 </html>
